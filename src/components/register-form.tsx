@@ -27,7 +27,10 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(2, {
+    message: 'O nome deve ter pelo menos 2 caracteres.',
+  }),
   email: z.string().email({
     message: 'Por favor, insira um e-mail válido.',
   }),
@@ -36,23 +39,24 @@ const loginSchema = z.object({
   }),
 })
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type RegisterFormValues = z.infer<typeof registerSchema>
 
-export function LoginForm({
+export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
   })
 
-  async function onSubmit(data: LoginFormValues) {
+  async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true)
     // Simular uma chamada de API
     console.log(data)
@@ -64,14 +68,31 @@ export function LoginForm({
     <div className={cn('grid gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl text-[#ff4e00]">Login</CardTitle>
+          <CardTitle className="text-2xl text-[#ff4e00]">Criar conta</CardTitle>
           <CardDescription className="text-[#5e5f5d]">
-            Insira seu e-mail e senha para acessar sua conta.
+            Insira seus dados abaixo para criar sua conta.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[#5e5f5d]">Nome</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Seu nome"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -103,7 +124,7 @@ export function LoginForm({
                       <Input
                         placeholder="••••••••"
                         type="password"
-                        autoComplete="current-password"
+                        autoComplete="new-password"
                         disabled={isLoading}
                         {...field}
                       />
@@ -118,19 +139,19 @@ export function LoginForm({
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Entrar
+                Cadastrar
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm text-muted-foreground">
-            Não tem uma conta?{' '}
+            Já tem uma conta?{' '}
             <Link
-              href="/register"
+              href="/login"
               className="underline underline-offset-4 text-[#ff4e00] hover:text-[#f61300]"
             >
-              Criar conta
+              Fazer login
             </Link>
           </div>
         </CardFooter>
