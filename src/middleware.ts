@@ -4,27 +4,24 @@ import type { NextRequest } from 'next/server'
 const TOKEN_COOKIE_NAME = 'engeman_auth_token'
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
   const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value
 
   const isAuthPage =
-    request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/register')
+    pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isProtectedRoute =
+    pathname.startsWith('/me') ||
+    pathname.startsWith('/properties') ||
+    pathname.startsWith('/favorites')
 
-  if (isAuthPage) {
-    if (token) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-    return NextResponse.next()
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
-  if (!token) {
-    let from = request.nextUrl.pathname
-    if (request.nextUrl.search) {
-      from += request.nextUrl.search
-    }
-    return NextResponse.redirect(
-      new URL(`/login?from=${encodeURIComponent(from)}`, request.url),
-    )
+  if (isProtectedRoute && !token) {
+    const url = new URL('/login', request.url)
+    url.searchParams.set('from', pathname)
+    return NextResponse.redirect(url)
   }
 
   return NextResponse.next()
