@@ -6,6 +6,8 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
+import { isAxiosError } from 'axios'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -46,6 +48,9 @@ export function RegisterForm({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const { signUp } = useAuth()
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -58,10 +63,22 @@ export function RegisterForm({
 
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true)
-    // Simular uma chamada de API
-    console.log(data)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsLoading(false)
+    setErrorMessage(null)
+
+    try {
+      await signUp(data)
+    } catch (e) {
+      if (isAxiosError(e) && e.response) {
+        setErrorMessage(
+          e.response.data?.message ||
+            'Erro ao registrar usuário. Verifique os dados fornecidos.',
+        )
+      } else {
+        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -76,6 +93,11 @@ export function RegisterForm({
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {errorMessage && (
+                <div className="p-3 text-sm text-red-500 bg-red-100/50 border border-red-500 rounded-md">
+                  {errorMessage}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="name"
