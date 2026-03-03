@@ -40,6 +40,12 @@ export const propertyService = {
     return response.data
   },
 
+  async getPropertyById(id: number): Promise<Property> {
+    const response = await api.get<Property>(`/api/property/${id}`)
+    console.log(`[GET] /api/property/${id}`, response.data)
+    return response.data
+  },
+
   async createProperty(data: PropertyCreateDTO): Promise<Property> {
     console.log('DATA -> [POST] /api/property', data)
     const response = await api.post<Property>('/api/property', data)
