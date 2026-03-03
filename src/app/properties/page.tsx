@@ -7,7 +7,6 @@ import { Property } from '@/types/property'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 
-// UI Components
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,8 +28,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { PropertyForm } from '@/components/property-form'
 import { PropertyCard } from '@/components/property-card'
-import { Loader2, Plus, Edit2, Trash2, Power, Eye } from 'lucide-react'
-import Link from 'next/link'
+import { Loader2, Plus } from 'lucide-react'
 
 export default function MyPropertiesPage() {
   const router = useRouter()
@@ -83,7 +81,7 @@ export default function MyPropertiesPage() {
 
   const handleSuccess = () => {
     handleCloseDialog()
-    fetchProperties() // Recarrega os dados
+    fetchProperties()
   }
 
   const handleDelete = async () => {

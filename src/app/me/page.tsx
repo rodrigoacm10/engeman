@@ -26,6 +26,15 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { userService } from '@/services/userService'
+import { UserPlus, Plus } from 'lucide-react'
 
 const profileSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres').max(100),
@@ -36,17 +45,36 @@ const profileSchema = z.object({
     .or(z.literal('')),
 })
 
+const createUserSchema = z.object({
+  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres').max(100),
+  email: z.string().email('E-mail inválido'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  role: z.enum(['ADMIN', 'CORRETOR', 'CLIENTE'] as const),
+})
+
 type ProfileFormValues = z.infer<typeof profileSchema>
+type CreateUserFormValues = z.infer<typeof createUserSchema>
 
 export default function MePage() {
   const { user, updateProfile, loading: authLoading } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
       password: '',
+    },
+  })
+
+  const createUserForm = useForm<CreateUserFormValues>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      role: 'CLIENTE',
     },
   })
 
@@ -79,6 +107,24 @@ export default function MePage() {
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function onCreateUser(data: CreateUserFormValues) {
+    setIsCreatingUser(true)
+
+    try {
+      await userService.createUser(data)
+      toast.success('Usuário criado com sucesso!')
+      createUserForm.reset()
+    } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        toast.error(error.response.data?.message || 'Erro ao criar usuário.')
+      } else {
+        toast.error('Ocorreu um erro inesperado. Tente novamente.')
+      }
+    } finally {
+      setIsCreatingUser(false)
     }
   }
 
@@ -202,6 +248,123 @@ export default function MePage() {
           </CardContent>
         </Card>
       </div>
+
+      {user.role === 'ADMIN' && (
+        <div className="mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <UserPlus className="h-8 w-8 text-[#ff4e00]" />
+            <h2 className="text-3xl font-extrabold text-[#ff4e00]">
+              Gerenciar Usuários
+            </h2>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Criar Novo Usuário</CardTitle>
+              <CardDescription>
+                Adicione um novo usuário ao sistema com um cargo específico.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...createUserForm}>
+                <form
+                  onSubmit={createUserForm.handleSubmit(onCreateUser)}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  <FormField
+                    control={createUserForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome Completo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome do usuário" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createUserForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>E-mail</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="email@exemplo.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createUserForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Senha</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createUserForm.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nível de Acesso</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um cargo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="ADMIN">Administrador</SelectItem>
+                            <SelectItem value="CORRETOR">Corretor</SelectItem>
+                            <SelectItem value="CLIENTE">Cliente</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="md:col-span-2 bg-[#ff4e00] hover:bg-[#e64600] text-white"
+                    disabled={isCreatingUser}
+                  >
+                    {isCreatingUser ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Criar Usuário
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

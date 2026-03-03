@@ -44,10 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Loader2,
-  Trash2,
-} from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 
 function HomeContent() {
   const router = useRouter()
@@ -258,11 +255,13 @@ function HomeContent() {
 
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-extrabold text-[#ff4e00] mb-2">
-          Imóveis Disponíveis
-        </h1>
-        <p className="text-gray-500">Encontre o imóvel perfeito para você.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#ff4e00] mb-2">
+            Imóveis Disponíveis
+          </h1>
+          <p className="text-gray-500">Encontre o imóvel perfeito para você.</p>
+        </div>
       </div>
 
       <Card className="bg-white/50 backdrop-blur border-[#ff4e00]/10">

@@ -51,15 +51,6 @@ export function PropertyCard({
       String(property.brokerName).trim().toLowerCase() ===
         String(user?.name).trim().toLowerCase())
   const showActionsMenu = canManage && !!(onEdit || onToggleStatus || onDelete)
-  console.log('onEdit', onEdit)
-  console.log('onToggleStatus', onToggleStatus)
-  console.log('onDelete', onDelete)
-  // const showActionsMenu = canManage && !!(onEdit || onToggleStatus || onDelete)
-
-  console.log('property', property)
-  console.log('user', user)
-  console.log('canManage', canManage)
-  console.log('showActionsMenu', showActionsMenu)
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200 relative group">
