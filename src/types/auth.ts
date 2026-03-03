@@ -26,3 +26,10 @@ export interface UserUpdateDTO {
   name?: string
   password?: string
 }
+
+export interface UserCreateDTO {
+  name: string
+  email: string
+  password?: string
+  role: UserRole
+}
