@@ -1,13 +1,37 @@
 import { Property } from '@/types/property'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MapPin, BedDouble, Ruler, Building, Star, User } from 'lucide-react'
+import {
+  MapPin,
+  BedDouble,
+  Ruler,
+  Building,
+  Star,
+  User,
+  MoreVertical,
+  Edit2,
+  Power,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface PropertyCardProps {
   property: Property
   isFavorite?: boolean
   onToggleFavorite?: (propertyId: number) => void
   isTogglingFavorite?: boolean
+  onEdit?: (property: Property) => void
+  onToggleStatus?: (property: Property) => void
+  onDelete?: (property: Property) => void
+  isTogglingStatus?: boolean
 }
 
 export function PropertyCard({
@@ -15,9 +39,30 @@ export function PropertyCard({
   isFavorite = false,
   onToggleFavorite,
   isTogglingFavorite = false,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+  isTogglingStatus = false,
 }: PropertyCardProps) {
+  const { user } = useAuth()
+  const canManage =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'CORRETOR' &&
+      String(property.brokerName).trim().toLowerCase() ===
+        String(user?.name).trim().toLowerCase())
+  const showActionsMenu = canManage && !!(onEdit || onToggleStatus || onDelete)
+  console.log('onEdit', onEdit)
+  console.log('onToggleStatus', onToggleStatus)
+  console.log('onDelete', onDelete)
+  // const showActionsMenu = canManage && !!(onEdit || onToggleStatus || onDelete)
+
+  console.log('property', property)
+  console.log('user', user)
+  console.log('canManage', canManage)
+  console.log('showActionsMenu', showActionsMenu)
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200 relative">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200 relative group">
       <div className="h-48 bg-gray-200 relative overflow-hidden">
         {property.imageUrls ? (
           <img
@@ -62,6 +107,80 @@ export function PropertyCard({
               } ${isTogglingFavorite ? 'opacity-50' : ''}`}
             />
           </Button>
+        )}
+
+        {/* Actions Menu */}
+        {showActionsMenu && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-12 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full w-8 h-8 shadow-sm z-10 hidden group-hover:flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 data-[state=open]:flex data-[state=open]:opacity-100"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
+                {isTogglingStatus ? (
+                  <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+                ) : (
+                  <MoreVertical className="w-4 h-4 text-gray-600" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 z-50 relative">
+              {onEdit && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onEdit(property)
+                  }}
+                  className="cursor-pointer font-medium"
+                >
+                  <Edit2 className="mr-2 h-4 w-4 text-blue-600" />
+                  <span>Editar Imóvel</span>
+                </DropdownMenuItem>
+              )}
+              {onToggleStatus && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onToggleStatus(property)
+                  }}
+                  className="cursor-pointer font-medium"
+                  disabled={isTogglingStatus}
+                >
+                  <Power
+                    className={`mr-2 h-4 w-4 ${
+                      property.active ? 'text-red-500' : 'text-green-600'
+                    }`}
+                  />
+                  <span>
+                    {property.active ? 'Desativar Imóvel' : 'Ativar Imóvel'}
+                  </span>
+                </DropdownMenuItem>
+              )}
+              {(onEdit || onToggleStatus) && onDelete && (
+                <DropdownMenuSeparator />
+              )}
+              {onDelete && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onDelete(property)
+                  }}
+                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 font-medium"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Excluir Imóvel</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 

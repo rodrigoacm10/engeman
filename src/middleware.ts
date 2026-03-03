@@ -10,6 +10,7 @@ export function middleware(request: NextRequest) {
   const isAuthPage =
     pathname.startsWith('/login') || pathname.startsWith('/register')
   const isProtectedRoute =
+    pathname === '/' ||
     pathname.startsWith('/me') ||
     pathname.startsWith('/properties') ||
     pathname.startsWith('/favorites')

@@ -1,20 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { propertyService } from '@/services/propertyService'
 import { Property } from '@/types/property'
 import { toast } from 'sonner'
+import { useAuth } from '@/hooks/useAuth'
 
 // UI Components
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -34,22 +28,30 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { PropertyForm } from '@/components/property-form'
+import { PropertyCard } from '@/components/property-card'
 import { Loader2, Plus, Edit2, Trash2, Power, Eye } from 'lucide-react'
 import Link from 'next/link'
 
 export default function MyPropertiesPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProperty, setEditingProperty] = useState<Property | null>(null)
 
-  // Deleção
+  useEffect(() => {
+    if (user && user.role === 'CLIENTE') {
+      toast.error('Você não tem permissão para acessar esta página.')
+      router.push('/')
+    }
+  }, [user, router])
+
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
     null,
   )
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Status
   const [isToggling, setIsToggling] = useState<number | null>(null)
 
   const fetchProperties = async () => {
@@ -184,107 +186,20 @@ export default function MyPropertiesPage() {
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="w-[80px]">ID</TableHead>
-                <TableHead>Título</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Localização</TableHead>
-                <TableHead className="w-[100px] text-center">Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {properties.map((property) => (
-                <TableRow key={property.id}>
-                  <TableCell className="font-medium text-gray-500">
-                    #{property.id}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium line-clamp-1">
-                      {property.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {property.type}
-                    </span>
-                  </TableCell>
-                  <TableCell className="font-semibold text-gray-900">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(property.value)}
-                  </TableCell>
-                  <TableCell className="text-gray-500">
-                    {property.city}, {property.state}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${property.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      {property.active ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Ver listagem pública"
-                        asChild
-                      >
-                        <Link
-                          href={`/?name=${encodeURIComponent(property.name)}`}
-                        >
-                          <Eye className="w-4 h-4 text-gray-500" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Alterar Status"
-                        onClick={() => handleToggleStatus(property)}
-                        disabled={isToggling === property.id}
-                      >
-                        {isToggling === property.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                        ) : (
-                          <Power
-                            className={`w-4 h-4 ${property.active ? 'text-green-600' : 'text-gray-400'}`}
-                          />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Editar"
-                        onClick={() => handleOpenDialog(property)}
-                      >
-                        <Edit2 className="w-4 h-4 text-blue-600" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="hover:bg-red-50 hover:text-red-600"
-                        title="Excluir"
-                        onClick={() => setPropertyToDelete(property)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {properties.map((property) => (
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onEdit={handleOpenDialog}
+              onToggleStatus={handleToggleStatus}
+              onDelete={setPropertyToDelete}
+              isTogglingStatus={isToggling === property.id}
+            />
+          ))}
         </div>
       )}
 
-      {/* Confirmação de Exclusão */}
       <AlertDialog
         open={!!propertyToDelete}
         onOpenChange={(open) => !open && setPropertyToDelete(null)}

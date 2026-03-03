@@ -13,7 +13,7 @@ export interface AuthResponse {
   token: string
 }
 
-export type UserRole = 'USER' | 'ADMIN'
+export type UserRole = 'ADMIN' | 'CORRETOR' | 'CLIENTE'
 
 export interface User {
   id: number
