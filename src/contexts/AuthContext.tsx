@@ -3,8 +3,14 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { destroyCookie, setCookie, parseCookies } from 'nookies'
-import { LoginCredentials, RegisterCredentials, User } from '@/types/auth'
+import {
+  LoginCredentials,
+  RegisterCredentials,
+  User,
+  UserUpdateDTO,
+} from '@/types/auth'
 import { authService } from '@/services/authService'
+import { userService } from '@/services/userService'
 import { api } from '@/lib/api'
 
 interface AuthContextType {
@@ -13,6 +19,7 @@ interface AuthContextType {
   signIn: (credentials: LoginCredentials) => Promise<void>
   signUp: (credentials: RegisterCredentials) => Promise<void>
   signOut: () => void
+  updateProfile: (data: UserUpdateDTO) => Promise<void>
   loading: boolean
 }
 
@@ -28,18 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user
 
   useEffect(() => {
-    const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
+    async function loadUser() {
+      const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
 
-    if (token) {
-      // Idealmente, a API tem uma rota `/me` para buscar os dados do usuário.
-      // Como não foi listada nos requisitos explícitos do desafio, vamos apenas definir
-      // um usuário fictício ou inferir a partir do JWT (não recomendado sem validação)
-      // Para avançarmos nesse mock client-side, daremos um email genérico confirmando o token.
-      setUser({ email: 'user@authenticated.com' })
-      api.defaults.headers.Authorization = `Bearer ${token}`
+      if (token) {
+        try {
+          api.defaults.headers.Authorization = `Bearer ${token}`
+          const userData = await userService.getMe()
+          setUser(userData)
+        } catch (error) {
+          console.error('Failed to fetch user data:', error)
+          // Se o token for inválido, podemos deslogar
+          signOut()
+        }
+      }
+
+      setLoading(false)
     }
 
-    setLoading(false)
+    loadUser()
   }, [])
 
   async function signIn(credentials: LoginCredentials) {
@@ -51,13 +65,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     api.defaults.headers.Authorization = `Bearer ${token}`
-    setUser({ email: credentials.email })
+    const userData = await userService.getMe()
+    setUser(userData)
     router.push('/')
   }
 
   async function signUp(credentials: RegisterCredentials) {
     await authService.register(credentials)
     router.push('/login')
+  }
+
+  async function updateProfile(data: UserUpdateDTO) {
+    const updatedUser = await userService.updateProfile(data)
+    setUser(updatedUser)
   }
 
   function signOut() {
@@ -69,7 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, signIn, signUp, signOut, loading }}
+      value={{
+        isAuthenticated,
+        user,
+        signIn,
+        signUp,
+        signOut,
+        updateProfile,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>
