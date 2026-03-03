@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 }
 
 import { AuthProvider } from '@/contexts/AuthContext'
-import { Toaster } from '@/components/ui/sonner'
+import { LayoutWrapper } from '@/components/layout-wrapper'
 
 export default function RootLayout({
   children,
@@ -31,8 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <Toaster position="top-right" richColors />
+          <LayoutWrapper>{children}</LayoutWrapper>
         </AuthProvider>
       </body>
     </html>
