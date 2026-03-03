@@ -1,4 +1,4 @@
-export type PropertyType = 'RESIDENCIAL' | 'COMERCIAL' | 'INDUSTRIAL' | 'RURAL'
+export type PropertyType = 'CASA' | 'TERRENO' | 'APARTAMENTO'
 
 export interface Property {
   id: number
@@ -35,4 +35,31 @@ export interface PaginatedResponse<T> {
   totalPages: number
   size: number
   number: number
+}
+
+export interface PropertyCreateDTO {
+  name: string
+  description: string
+  type: PropertyType
+  value: number
+  area: number
+  bedrooms: number
+  address: string
+  city: string
+  state: string
+  imageUrls: string
+}
+
+export interface PropertyUpdateDTO {
+  name?: string
+  description?: string
+  type?: PropertyType
+  value?: number
+  area?: number
+  bedrooms?: number
+  address?: string
+  city?: string
+  state?: string
+  brokerId?: number
+  imageUrls?: string
 }
