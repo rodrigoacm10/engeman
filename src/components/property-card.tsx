@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 interface PropertyCardProps {
   property: Property
@@ -105,14 +106,16 @@ export function PropertyCard({
           </Button>
         )}
 
-        {/* Actions Menu */}
         {showActionsMenu && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-12 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full w-8 h-8 shadow-sm z-10 hidden group-hover:flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 data-[state=open]:flex data-[state=open]:opacity-100"
+                className={cn(
+                  'absolute top-2 right-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full w-8 h-8 shadow-sm z-10 flex items-center justify-center transition-all opacity-100 group-hover:opacity-100',
+                  onToggleFavorite && 'right-12',
+                )}
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
