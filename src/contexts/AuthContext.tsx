@@ -32,7 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const isAuthenticated = !!user
+  const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
+  const isAuthenticated = !!user || !!token
 
   useEffect(() => {
     async function loadUser() {

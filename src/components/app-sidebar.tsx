@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 import { Home, User, Building, Heart, LogOut, ChevronUp } from 'lucide-react'
 
 import {
@@ -40,6 +42,7 @@ const navItems = [
     url: '/properties',
     icon: Building,
     protected: true,
+    roles: ['ADMIN', 'CORRETOR'],
   },
   {
     title: 'Favoritos',
@@ -50,8 +53,13 @@ const navItems = [
 ]
 
 export function AppSidebar() {
-  const { user, signOut, isAuthenticated } = useAuth()
+  const { user, signOut, isAuthenticated, loading } = useAuth()
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     // collapsible="icon"
@@ -78,7 +86,14 @@ export function AppSidebar() {
               {navItems.map((item) => {
                 const isActive = pathname === item.url
 
-                if (item.protected && !isAuthenticated) return null
+                if (!mounted) {
+                  if (item.protected) return null
+                } else {
+                  if (item.protected && !isAuthenticated) return null
+                  if (item.roles && loading) return null
+                  if (item.roles && user && !item.roles.includes(user.role))
+                    return null
+                }
 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -106,7 +121,15 @@ export function AppSidebar() {
       <SidebarFooter className="p-2 border-t border-[#ff4e00]/5">
         <SidebarMenu>
           <SidebarMenuItem>
-            {isAuthenticated && user ? (
+            {!mounted ? (
+              <SidebarMenuButton
+                disabled
+                className="text-gray-400 hover:bg-transparent cursor-default"
+              >
+                <User />
+                <span>Carregando...</span>
+              </SidebarMenuButton>
+            ) : isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton className="h-12 hover:bg-[#ff4e00]/5">

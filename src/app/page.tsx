@@ -19,13 +19,35 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { PropertyCard } from '@/components/property-card'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { PropertyForm } from '@/components/property-form'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, MapPin, BedDouble, Ruler, Building } from 'lucide-react'
+import {
+  Loader2,
+  Trash2,
+} from 'lucide-react'
 
 function HomeContent() {
   const router = useRouter()
@@ -54,6 +76,14 @@ function HomeContent() {
   const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
     new Set(),
   )
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
+  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
+    null,
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isToggling, setIsToggling] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -104,6 +134,70 @@ function HomeContent() {
         newSet.delete(propertyId)
         return newSet
       })
+    }
+  }
+
+  const handleOpenDialog = (property?: Property) => {
+    setEditingProperty(property || null)
+    setIsDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false)
+    setEditingProperty(null)
+  }
+
+  const handleSuccess = () => {
+    handleCloseDialog()
+    setPage(0)
+  }
+
+  const handleDelete = async () => {
+    if (!propertyToDelete) return
+
+    setIsDeleting(true)
+    try {
+      await propertyService.deleteProperty(propertyToDelete.id)
+      toast.success('Imóvel excluído com sucesso.')
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          content: prev.content.filter((p) => p.id !== propertyToDelete?.id),
+        }
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao excluir imóvel.')
+    } finally {
+      setIsDeleting(false)
+      setPropertyToDelete(null)
+    }
+  }
+
+  const handleToggleStatus = async (property: Property) => {
+    setIsToggling(property.id)
+    try {
+      const updatedProperty = await propertyService.togglePropertyStatus(
+        property.id,
+      )
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          content: prev.content.map((p) =>
+            p.id === updatedProperty.id ? updatedProperty : p,
+          ),
+        }
+      })
+      toast.success(
+        `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
+      )
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao alterar status do imóvel.')
+    } finally {
+      setIsToggling(null)
     }
   }
 
@@ -292,6 +386,10 @@ function HomeContent() {
                   isFavorite={favorites.has(property.id)}
                   onToggleFavorite={handleToggleFavorite}
                   isTogglingFavorite={togglingFavorites.has(property.id)}
+                  onEdit={handleOpenDialog}
+                  onToggleStatus={handleToggleStatus}
+                  onDelete={setPropertyToDelete}
+                  isTogglingStatus={isToggling === property.id}
                 />
               ))}
             </div>
@@ -323,6 +421,64 @@ function HomeContent() {
           </>
         )}
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProperty ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os dados do imóvel abaixo. As informações serão
+              publicadas imediatamente.
+            </DialogDescription>
+          </DialogHeader>
+          <PropertyForm
+            initialData={editingProperty}
+            onSuccess={handleSuccess}
+            onCancel={handleCloseDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={!!propertyToDelete}
+        onOpenChange={(open) => !open && setPropertyToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o
+              imóvel
+              <span className="font-bold text-gray-900 mx-1">
+                {propertyToDelete?.name}
+              </span>
+              dos nossos servidores.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Excluir Imóvel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
