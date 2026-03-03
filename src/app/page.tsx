@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebounce } from 'use-debounce'
 import { propertyService } from '@/services/propertyService'
+import { userService } from '@/services/userService'
+import { useAuth } from '@/hooks/useAuth'
+import { toast } from 'sonner'
 import {
   Property,
   PropertyFilters,
@@ -11,15 +14,10 @@ import {
   PaginatedResponse,
 } from '@/types/property'
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { PropertyCard } from '@/components/property-card'
 import {
   Select,
   SelectContent,
@@ -50,6 +48,64 @@ function HomeContent() {
 
   const [data, setData] = useState<PaginatedResponse<Property> | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const { user } = useAuth()
+  const [favorites, setFavorites] = useState<Set<number>>(new Set())
+  const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
+    new Set(),
+  )
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (user) {
+        try {
+          const favs = await userService.getFavorites()
+          setFavorites(new Set(favs.map((f) => f.id)))
+        } catch (error) {
+          console.error('Failed to fetch favorites', error)
+        }
+      } else {
+        setFavorites(new Set())
+      }
+    }
+    fetchFavorites()
+  }, [user])
+
+  const handleToggleFavorite = async (propertyId: number) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para favoritar imóveis.')
+      router.push('/login')
+      return
+    }
+
+    setTogglingFavorites((prev) => new Set(prev).add(propertyId))
+    const isCurrentlyFavorite = favorites.has(propertyId)
+
+    try {
+      if (isCurrentlyFavorite) {
+        await userService.removeFavorite(propertyId)
+        setFavorites((prev) => {
+          const newFavs = new Set(prev)
+          newFavs.delete(propertyId)
+          return newFavs
+        })
+        toast.success('Imóvel removido dos favoritos.')
+      } else {
+        await userService.addFavorite(propertyId)
+        setFavorites((prev) => new Set(prev).add(propertyId))
+        toast.success('Imóvel adicionado aos favoritos.')
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite', error)
+      toast.error('Ocorreu um erro ao atualizar os favoritos.')
+    } finally {
+      setTogglingFavorites((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(propertyId)
+        return newSet
+      })
+    }
+  }
 
   const updateUrlParams = useCallback(() => {
     const params = new URLSearchParams()
@@ -230,51 +286,13 @@ function HomeContent() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {data?.content.map((property) => (
-                <Card
+                <PropertyCard
                   key={property.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200"
-                >
-                  <div className="h-48 bg-gray-200 relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      <Building size={48} opacity={0.2} />
-                    </div>
-                    <div className="absolute top-2 left-2 bg-[#ff4e00] text-white text-xs font-bold px-2 py-1 rounded">
-                      {property.type}
-                    </div>
-                    {!property.active && (
-                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        Inativo
-                      </div>
-                    )}
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="line-clamp-1">
-                      {property.name}
-                    </CardTitle>
-                    <div className="flex items-center text-gray-500 text-sm mt-1">
-                      <MapPin size={14} className="mr-1" />
-                      {property.city}, {property.state}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-4">
-                    <p className="text-2xl font-bold text-[#ff4e00] mb-4">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(property.value)}
-                    </p>
-                    <div className="flex gap-4 text-sm text-gray-600 border-t pt-4">
-                      <div className="flex items-center" title="Quartos">
-                        <BedDouble size={16} className="mr-1 text-gray-400" />
-                        {property.bedrooms}
-                      </div>
-                      <div className="flex items-center" title="Área">
-                        <Ruler size={16} className="mr-1 text-gray-400" />
-                        {property.area} m²
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  property={property}
+                  isFavorite={favorites.has(property.id)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isTogglingFavorite={togglingFavorites.has(property.id)}
+                />
               ))}
             </div>
 
