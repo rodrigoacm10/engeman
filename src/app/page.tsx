@@ -134,14 +134,16 @@ function HomeContent() {
                 Tipo de Imóvel
               </label>
               <Select
-                value={type}
-                onValueChange={(val) => setType(val as PropertyType | '')}
+                value={type || 'all'}
+                onValueChange={(val) =>
+                  setType(val === 'all' ? '' : (val as PropertyType))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todostipos">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="CASA">Casa</SelectItem>
                   <SelectItem value="TERRENO">Terreno</SelectItem>
                   <SelectItem value="APARTAMENTO">Apartamento</SelectItem>
