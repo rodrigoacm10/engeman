@@ -1,6 +1,6 @@
 import { Property } from '@/types/property'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MapPin, BedDouble, Ruler, Building, Star } from 'lucide-react'
+import { MapPin, BedDouble, Ruler, Building, Star, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface PropertyCardProps {
@@ -18,17 +18,25 @@ export function PropertyCard({
 }: PropertyCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200 relative">
-      <div className="h-48 bg-gray-200 relative">
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-          <Building size={48} opacity={0.2} />
-        </div>
+      <div className="h-48 bg-gray-200 relative overflow-hidden">
+        {property.imageUrls ? (
+          <img
+            src={property.imageUrls}
+            alt={property.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            <Building size={48} opacity={0.2} />
+          </div>
+        )}
 
-        <div className="absolute top-2 left-2 bg-[#ff4e00] text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+        <div className="absolute top-2 left-2 bg-[#ff4e00] text-white text-xs font-bold px-2 py-1 rounded shadow-sm z-10">
           {property.type}
         </div>
 
         {!property.active && (
-          <div className="absolute top-2 left-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+          <div className="absolute top-2 left-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm z-10">
             Inativo
           </div>
         )}
@@ -37,7 +45,7 @@ export function PropertyCard({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full w-8 h-8 shadow-sm"
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full w-8 h-8 shadow-sm z-10"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -61,21 +69,34 @@ export function PropertyCard({
         <CardTitle className="line-clamp-1" title={property.name}>
           {property.name}
         </CardTitle>
-        <div className="flex items-center text-gray-500 text-sm mt-1">
-          <MapPin size={14} className="mr-1 shrink-0" />
-          <span className="truncate">
-            {property.city}, {property.state}
+
+        <div
+          className="flex items-start text-gray-500 text-sm mt-1"
+          title={`${property.address}, ${property.city} - ${property.state}`}
+        >
+          <MapPin size={14} className="mr-1 mt-0.5 shrink-0" />
+          <span className="line-clamp-2">
+            {property.address} - {property.city}, {property.state}
           </span>
         </div>
       </CardHeader>
 
       <CardContent className="pb-4">
-        <p className="text-2xl font-bold text-[#ff4e00] mb-4">
+        <p className="text-2xl font-bold text-[#ff4e00] mb-2">
           {new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
           }).format(property.value)}
         </p>
+
+        <div
+          className="flex items-center text-sm text-gray-500 mb-4"
+          title="Corretor responsável"
+        >
+          <User size={14} className="mr-1 shrink-0 text-gray-400" />
+          <span className="truncate">{property.brokerName}</span>
+        </div>
+
         <div className="flex gap-4 text-sm text-gray-600 border-t pt-4">
           <div className="flex items-center" title="Quartos">
             <BedDouble size={16} className="mr-1 text-gray-400 shrink-0" />
