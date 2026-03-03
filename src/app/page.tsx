@@ -142,10 +142,9 @@ function HomeContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todostipos">Todos</SelectItem>
-                  <SelectItem value="RESIDENCIAL">Residencial</SelectItem>
-                  <SelectItem value="COMERCIAL">Comercial</SelectItem>
-                  <SelectItem value="INDUSTRIAL">Industrial</SelectItem>
-                  <SelectItem value="RURAL">Rural</SelectItem>
+                  <SelectItem value="CASA">Casa</SelectItem>
+                  <SelectItem value="TERRENO">Terreno</SelectItem>
+                  <SelectItem value="APARTAMENTO">Apartamento</SelectItem>
                 </SelectContent>
               </Select>
             </div>
