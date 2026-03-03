@@ -21,7 +21,7 @@ export function AppHeader() {
     if (routeTitles[path]) return routeTitles[path]
     if (path.split('/').length === 2 && path !== '/')
       return 'Detalhes do Imóvel'
-    return 'Cardplace'
+    return 'Engimob'
   }
 
   return (
@@ -31,7 +31,7 @@ export function AppHeader() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <div className="flex items-center gap-2 md:hidden">
           <Building className="text-[#ff4e00]" size={20} />
-          <span className="font-bold text-[#ff4e00]">Cardplace</span>
+          <span className="font-bold text-[#ff4e00]">Engimob</span>
           <Separator orientation="vertical" className="mx-2 h-4" />
         </div>
         <h1 className="text-sm font-semibold text-gray-700 tracking-tight">

@@ -35,7 +35,7 @@ export default function AuthLayout({
               "A melhor plataforma para gerenciar e trocar seus cards
               colecionáveis com segurança e praticidade."
             </p>
-            <footer className="text-sm text-white/80">Equipe Cardplace</footer>
+            <footer className="text-sm text-white/80">Equipe Engimob</footer>
           </blockquote>
         </div>
       </div>

@@ -64,9 +64,7 @@ export function AppSidebar() {
           <div className="w-8 h-8 rounded bg-[#ff4e00] flex items-center justify-center text-white">
             <Building size={20} />
           </div>
-          <span className="group-data-[collapsible=icon]:hidden">
-            Cardplace
-          </span>
+          <span className="group-data-[collapsible=icon]:hidden">Engimob</span>
         </Link>
       </SidebarHeader>
 
