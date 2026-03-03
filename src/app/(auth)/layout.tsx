@@ -25,18 +25,18 @@ export default function AuthLayout({
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
-          src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=2574&auto=format&fit=crop"
+          src="/img-background.png"
           alt="Abstract Background"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.3] dark:grayscale"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent p-10 flex flex-col justify-end">
-          <blockquote className="space-y-2">
+        <div className="absolute inset-0 bg-linear-to-t from-[#5e5f5d] to-transparent p-10 flex flex-col justify-end">
+          <div className="space-y-2">
             <p className="text-lg font-medium text-white">
               "A melhor plataforma para gerenciar e trocar seus cards
               colecionáveis com segurança e praticidade."
             </p>
-            <footer className="text-sm text-white/80">Equipe Engimob</footer>
-          </blockquote>
+            <p className="text-sm text-[#ff4e00]">Equipe Engimob</p>
+          </div>
         </div>
       </div>
     </div>

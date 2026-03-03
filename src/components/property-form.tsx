@@ -26,12 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Property,
-  PropertyCreateDTO,
-  PropertyUpdateDTO,
-  PropertyType,
-} from '@/types/property'
+import { Property } from '@/types/property'
 import { propertyService } from '@/services/propertyService'
 
 const propertySchema = z.object({
@@ -99,18 +94,15 @@ export function PropertyForm({
         },
   })
 
-  // Função para lidar com o upload da imagem
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validar tipo e tamanho
     if (!file.type.startsWith('image/')) {
       toast.error('Por favor, selecione apenas arquivos de imagem.')
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB
       toast.error('A imagem deve ter no máximo 5MB.')
       return
     }
@@ -125,7 +117,6 @@ export function PropertyForm({
       toast.error('Erro ao fazer upload da imagem.')
     } finally {
       setIsUploading(false)
-      // Limpar o input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -204,15 +195,38 @@ export function PropertyForm({
           <FormField
             control={form.control}
             name="value"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Valor (R$)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="500000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field: { value, onChange, ...restField } }) => {
+              // Formata o valor para exibição (moeda)
+              const displayValue = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              }).format(value || 0)
+
+              // Intercepta a digitação para salvar como número
+              const handleCurrencyChange = (
+                e: React.ChangeEvent<HTMLInputElement>,
+              ) => {
+                const rawValue = e.target.value.replace(/\D/g, '')
+                const numericValue = Number(rawValue) / 100
+                onChange(numericValue)
+              }
+
+              return (
+                <FormItem>
+                  <FormLabel>Valor (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="R$ 500.000,00"
+                      value={displayValue}
+                      onChange={handleCurrencyChange}
+                      {...restField}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
 
           <FormField
@@ -222,7 +236,17 @@ export function PropertyForm({
               <FormItem>
                 <FormLabel>Área (m²)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="120" {...field} />
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="120"
+                    onKeyDown={(e) => {
+                      if (['-', '+', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault()
+                      }
+                    }}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -236,7 +260,17 @@ export function PropertyForm({
               <FormItem>
                 <FormLabel>Quartos</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="3" {...field} />
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="3"
+                    onKeyDown={(e) => {
+                      if (['-', '+', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault()
+                      }
+                    }}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -312,11 +346,11 @@ export function PropertyForm({
             )}
           />
 
+          {/* SESSÃO DE IMAGENS E BOTÕES */}
           <div className="md:col-span-2 space-y-4">
             <FormLabel>Imagem do Imóvel</FormLabel>
 
             <div className="flex flex-col sm:flex-row gap-4 items-start">
-              {/* Botão de Upload */}
               <div className="flex-1 w-full">
                 <input
                   type="file"
@@ -349,7 +383,6 @@ export function PropertyForm({
                 </p>
               </div>
 
-              {/* URL Direta */}
               <div className="flex-1 w-full">
                 <FormField
                   control={form.control}
@@ -375,10 +408,8 @@ export function PropertyForm({
               </div>
             </div>
 
-            {/* Preview */}
             {form.watch('imageUrls') && !form.formState.errors.imageUrls && (
               <div className="mt-2 w-full h-40 relative rounded-md overflow-hidden bg-gray-100 border flex items-center justify-center">
-                {/* Usando img normal para facilitar debug da URL provida. Na prática seria legal usar next/image */}
                 <img
                   src={form.watch('imageUrls')}
                   alt="Preview do imóvel"
