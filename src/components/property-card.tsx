@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,7 @@ export function PropertyCard({
   isTogglingStatus = false,
 }: PropertyCardProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const canManage =
     user?.role === 'ADMIN' ||
     (user?.role === 'CORRETOR' &&
@@ -53,7 +55,10 @@ export function PropertyCard({
   const showActionsMenu = canManage && !!(onEdit || onToggleStatus || onDelete)
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-gray-200 relative group">
+    <Card
+      className="overflow-hidden hover:shadow-lg transition-all duration-300 border-gray-200 relative group cursor-pointer hover:scale-105"
+      onClick={() => router.push(`/${property.id}`)}
+    >
       <div className="h-48 bg-gray-200 relative overflow-hidden">
         {property.imageUrls ? (
           <img
