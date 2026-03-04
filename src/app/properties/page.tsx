@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { propertyService } from '@/services/propertyService'
 import { Property } from '@/types/property'
 import { toast } from 'sonner'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

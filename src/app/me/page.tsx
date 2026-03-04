@@ -8,7 +8,7 @@ import { Loader2, User as UserIcon, Mail, Shield, Save } from 'lucide-react'
 import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
 
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -35,25 +35,8 @@ import {
 } from '@/components/ui/select'
 import { userService } from '@/services/userService'
 import { UserPlus, Plus } from 'lucide-react'
-
-const profileSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres').max(100),
-  password: z
-    .string()
-    .min(6, 'A senha deve ter pelo menos 6 caracteres')
-    .optional()
-    .or(z.literal('')),
-})
-
-const createUserSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres').max(100),
-  email: z.string().email('E-mail inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  role: z.enum(['ADMIN', 'CORRETOR', 'CLIENTE'] as const),
-})
-
-type ProfileFormValues = z.infer<typeof profileSchema>
-type CreateUserFormValues = z.infer<typeof createUserSchema>
+import { ProfileFormValues, profileSchema } from '@/schemas/profile-schema'
+import { CreateUserFormValues, createUserSchema } from '@/schemas/user-schema'
 
 export default function MePage() {
   const { user, updateProfile, loading: authLoading } = useAuth()

@@ -28,27 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Property } from '@/types/property'
 import { propertyService } from '@/services/propertyService'
-
-const propertySchema = z.object({
-  name: z
-    .string()
-    .min(10, 'Nome deve ter pelo menos 10 caracteres')
-    .max(100, 'Máximo de 100 caracteres'),
-  description: z.string().min(5, 'A descrição é obrigatória'),
-  type: z.enum(['CASA', 'TERRENO', 'APARTAMENTO']),
-  value: z.coerce.number().positive('O valor deve ser positivo'),
-  area: z.coerce.number().positive('A área deve ser positiva'),
-  bedrooms: z.coerce.number().min(0, 'Número de quartos não pode ser negativo'),
-  address: z.string().min(5, 'O endereço é obrigatório'),
-  city: z.string().min(2, 'A cidade é obrigatória'),
-  state: z.string().length(2, 'O estado deve ter 2 letras (ex: SP)'),
-  imageUrls: z
-    .string()
-    .url('A URL da imagem deve ser válida')
-    .min(1, 'A imagem é obrigatória'),
-})
-
-type PropertyFormValues = z.infer<typeof propertySchema>
+import { PropertyFormValues, propertySchema } from '@/schemas/property-schema'
 
 interface PropertyFormProps {
   initialData?: Property | null

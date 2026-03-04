@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebounce } from 'use-debounce'
 import { propertyService } from '@/services/propertyService'
 import { userService } from '@/services/userService'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 import {
   Property,

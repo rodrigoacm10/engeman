@@ -28,7 +28,7 @@ import {
 import { PropertyForm } from '@/components/property-form'
 import { Loader2, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function FavoritesPage() {
   const { user } = useAuth()

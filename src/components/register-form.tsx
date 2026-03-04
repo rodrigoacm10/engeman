@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { isAxiosError } from 'axios'
 
 import { cn } from '@/lib/utils'
@@ -28,20 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-
-const registerSchema = z.object({
-  name: z.string().min(2, {
-    message: 'O nome deve ter pelo menos 2 caracteres.',
-  }),
-  email: z.string().email({
-    message: 'Por favor, insira um e-mail válido.',
-  }),
-  password: z.string().min(6, {
-    message: 'A senha deve ter pelo menos 6 caracteres.',
-  }),
-})
-
-type RegisterFormValues = z.infer<typeof registerSchema>
+import { RegisterFormValues, registerSchema } from '@/schemas/register-schema'
 
 export function RegisterForm({
   className,
