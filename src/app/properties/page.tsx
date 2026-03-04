@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { propertyService } from '@/services/propertyService'
 import { Property } from '@/types/property'
@@ -8,6 +8,8 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -28,12 +30,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { PropertyForm } from '@/components/property-form'
 import { PropertyCard } from '@/components/property-card'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, Search } from 'lucide-react'
 
 export default function MyPropertiesPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [properties, setProperties] = useState<Property[]>([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProperty, setEditingProperty] = useState<Property | null>(null)
@@ -121,6 +124,17 @@ export default function MyPropertiesPage() {
     }
   }
 
+  const filteredProperties = useMemo(() => {
+    if (!search.trim()) return properties
+    const lowerSearch = search.toLowerCase()
+    return properties.filter(
+      (p) =>
+        p.name.toLowerCase().includes(lowerSearch) ||
+        p.city.toLowerCase().includes(lowerSearch) ||
+        p.state.toLowerCase().includes(lowerSearch),
+    )
+  }, [properties, search])
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -162,6 +176,20 @@ export default function MyPropertiesPage() {
         </Dialog>
       </div>
 
+      <Card className="bg-white/50 backdrop-blur border-[#ff4e00]/10 mb-8">
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-2">
+            <Search className="text-gray-400 w-5 h-5 shrink-0" />
+            <Input
+              placeholder="Buscar por nome, cidade ou estado..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-[#ff4e00]" />
@@ -183,9 +211,18 @@ export default function MyPropertiesPage() {
             Cadastrar meu primeiro Imóvel
           </Button>
         </div>
+      ) : filteredProperties.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+          <h3 className="text-xl font-bold text-gray-500 mb-2">
+            Nenhum resultado encontrado
+          </h3>
+          <p className="text-gray-400">
+            Tente ajustar sua busca para encontrar o imóvel desejado.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {properties.map((property) => (
+          {filteredProperties.map((property) => (
             <PropertyCard
               key={property.id}
               property={property}
