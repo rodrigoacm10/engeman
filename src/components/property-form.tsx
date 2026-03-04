@@ -196,13 +196,11 @@ export function PropertyForm({
             control={form.control}
             name="value"
             render={({ field: { value, onChange, ...restField } }) => {
-              // Formata o valor para exibição (moeda)
               const displayValue = new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
               }).format(value || 0)
 
-              // Intercepta a digitação para salvar como número
               const handleCurrencyChange = (
                 e: React.ChangeEvent<HTMLInputElement>,
               ) => {
@@ -346,7 +344,6 @@ export function PropertyForm({
             )}
           />
 
-          {/* SESSÃO DE IMAGENS E BOTÕES */}
           <div className="md:col-span-2 space-y-4">
             <FormLabel>Imagem do Imóvel</FormLabel>
 

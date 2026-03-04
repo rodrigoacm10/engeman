@@ -11,7 +11,6 @@ export const propertyService = {
   async getProperties(
     filters?: PropertyFilters,
   ): Promise<PaginatedResponse<Property>> {
-    // Remove undefined ou chaves vazias para não sujar a URL
     const params: Record<string, string | number> = {}
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -28,7 +27,6 @@ export const propertyService = {
       },
     )
 
-    console.log('[GET] /api/property', response.data)
     return response.data
   },
 

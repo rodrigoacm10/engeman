@@ -24,7 +24,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
@@ -62,8 +61,8 @@ function HomeContent() {
   )
 
   const [page, setPage] = useState(Number(searchParams.get('page')) || 0)
-  const [size] = useState(10)
-  const [sort] = useState('id')
+  const [size, setSize] = useState(Number(searchParams.get('size')) || 10)
+  const [sort, setSort] = useState(searchParams.get('sort') || 'id')
 
   const [data, setData] = useState<PaginatedResponse<Property> | null>(null)
   const [loading, setLoading] = useState(true)
@@ -207,9 +206,21 @@ function HomeContent() {
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (minBedrooms) params.set('minBedrooms', minBedrooms)
     params.set('page', page.toString())
+    params.set('size', size.toString())
+    params.set('sort', sort)
 
     router.replace(`/?${params.toString()}`)
-  }, [debouncedName, type, minPrice, maxPrice, minBedrooms, page, router])
+  }, [
+    debouncedName,
+    type,
+    minPrice,
+    maxPrice,
+    minBedrooms,
+    page,
+    size,
+    sort,
+    router,
+  ])
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -251,7 +262,7 @@ function HomeContent() {
 
   useEffect(() => {
     setPage(0)
-  }, [debouncedName, type, minPrice, maxPrice, minBedrooms])
+  }, [debouncedName, type, minPrice, maxPrice, minBedrooms, size, sort])
 
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-8">
@@ -288,7 +299,7 @@ function HomeContent() {
                   setType(val === 'all' ? '' : (val as PropertyType))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,7 +340,7 @@ function HomeContent() {
                 Mín. Quartos
               </label>
               <Select value={minBedrooms} onValueChange={setMinBedrooms}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Qualquer" />
                 </SelectTrigger>
                 <SelectContent>
@@ -343,7 +354,46 @@ function HomeContent() {
             </div>
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t border-gray-100 pt-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Ordenar por
+                </label>
+                <Select value={sort} onValueChange={setSort}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="id">Mais Recentes</SelectItem>
+                    <SelectItem value="name">Nome (A-Z)</SelectItem>
+                    <SelectItem value="value">Valor Menor-Maior</SelectItem>
+                    <SelectItem value="area">Menor Área</SelectItem>
+                    <SelectItem value="bedrooms">Menos Quartos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Itens por página
+                </label>
+                <Select
+                  value={size.toString()}
+                  onValueChange={(v) => setSize(Number(v))}
+                >
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue placeholder="Qtd" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <Button
               variant="outline"
               onClick={() => {
@@ -352,6 +402,8 @@ function HomeContent() {
                 setMinPrice('')
                 setMaxPrice('')
                 setMinBedrooms('')
+                setSort('id')
+                setSize(10)
               }}
               className="text-gray-500 hover:text-[#ff4e00]"
             >
