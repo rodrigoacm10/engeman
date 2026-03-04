@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -34,10 +35,23 @@ export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { signUp } = useAuth()
+
+  const registerMutation = useMutation({
+    mutationFn: signUp,
+    onError: (e) => {
+      if (isAxiosError(e) && e.response) {
+        setErrorMessage(
+          e.response.data?.message ||
+            'Erro ao registrar usuário. Verifique os dados fornecidos.',
+        )
+      } else {
+        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
+      }
+    },
+  })
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -48,25 +62,12 @@ export function RegisterForm({
     },
   })
 
-  async function onSubmit(data: RegisterFormValues) {
-    setIsLoading(true)
+  function onSubmit(data: RegisterFormValues) {
     setErrorMessage(null)
-
-    try {
-      await signUp(data)
-    } catch (e) {
-      if (isAxiosError(e) && e.response) {
-        setErrorMessage(
-          e.response.data?.message ||
-            'Erro ao registrar usuário. Verifique os dados fornecidos.',
-        )
-      } else {
-        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
-      }
-    } finally {
-      setIsLoading(false)
-    }
+    registerMutation.mutate(data)
   }
+
+  const isLoading = registerMutation.isPending
 
   return (
     <div className={cn('grid gap-6', className)} {...props}>

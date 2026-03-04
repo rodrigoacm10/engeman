@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { userService } from '@/services/userService'
 import { propertyService } from '@/services/propertyService'
 import { Property, PaginatedResponse } from '@/types/property'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { PropertyCard } from '@/components/property-card'
@@ -31,9 +32,8 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function FavoritesPage() {
+  const queryClient = useQueryClient()
   const { user } = useAuth()
-  const [favorites, setFavorites] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
     new Set(),
@@ -47,44 +47,44 @@ export default function FavoritesPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isToggling, setIsToggling] = useState<number | null>(null)
 
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!user) return
-      setLoading(true)
+  const { data: favorites = [], isLoading: loading } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: async () => {
       try {
         const data = await userService.getFavorites()
         const items = Array.isArray(data)
           ? data
           : (data as unknown as PaginatedResponse<Property>).content || []
-        setFavorites(items)
+        return items
       } catch (error) {
-        console.error('Failed to fetch favorites', error)
         toast.error('Não foi possível carregar seus favoritos.')
-      } finally {
-        setLoading(false)
+        throw error
       }
-    }
+    },
+    enabled: !!user,
+  })
 
-    fetchFavorites()
-  }, [user])
-
-  const handleToggleFavorite = async (propertyId: number) => {
-    setTogglingFavorites((prev) => new Set(prev).add(propertyId))
-
-    try {
-      await userService.removeFavorite(propertyId)
-      setFavorites((prev) => prev.filter((p) => p.id !== propertyId))
+  const removeFavoriteMutation = useMutation({
+    mutationFn: userService.removeFavorite,
+    onSuccess: () => {
       toast.success('Imóvel removido dos favoritos.')
-    } catch (error) {
-      console.error('Failed to remove favorite', error)
+      queryClient.invalidateQueries({ queryKey: ['favorites'] })
+    },
+    onError: () => {
       toast.error('Ocorreu um erro ao remover dos favoritos.')
-    } finally {
+    },
+    onSettled: (_, __, propertyId) => {
       setTogglingFavorites((prev) => {
         const newSet = new Set(prev)
         newSet.delete(propertyId)
         return newSet
       })
-    }
+    },
+  })
+
+  const handleToggleFavorite = async (propertyId: number) => {
+    setTogglingFavorites((prev) => new Set(prev).add(propertyId))
+    removeFavoriteMutation.mutate(propertyId)
   }
 
   const handleOpenDialog = (property?: Property) => {
@@ -99,59 +99,49 @@ export default function FavoritesPage() {
 
   const handleSuccess = () => {
     handleCloseDialog()
-    const fetchFavorites = async () => {
-      if (!user) return
-      setLoading(true)
-      try {
-        const data = await userService.getFavorites()
-        const items = Array.isArray(data)
-          ? data
-          : (data as unknown as PaginatedResponse<Property>).content || []
-        setFavorites(items)
-      } catch (error) {
-        console.error('Failed to fetch favorites', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchFavorites()
+    queryClient.invalidateQueries({ queryKey: ['favorites'] })
   }
+
+  const deleteMutation = useMutation({
+    mutationFn: propertyService.deleteProperty,
+    onSuccess: () => {
+      toast.success('Imóvel excluído com sucesso.')
+      queryClient.invalidateQueries({ queryKey: ['favorites'] })
+    },
+    onError: () => {
+      toast.error('Erro ao excluir imóvel.')
+    },
+    onSettled: () => {
+      setIsDeleting(false)
+      setPropertyToDelete(null)
+    },
+  })
 
   const handleDelete = async () => {
     if (!propertyToDelete) return
-
     setIsDeleting(true)
-    try {
-      await propertyService.deleteProperty(propertyToDelete.id)
-      toast.success('Imóvel excluído com sucesso.')
-      setFavorites((prev) => prev.filter((p) => p.id !== propertyToDelete.id))
-    } catch (error) {
-      console.error(error)
-      toast.error('Erro ao excluir imóvel.')
-    } finally {
-      setIsDeleting(false)
-      setPropertyToDelete(null)
-    }
+    deleteMutation.mutate(propertyToDelete.id)
   }
 
-  const handleToggleStatus = async (property: Property) => {
-    setIsToggling(property.id)
-    try {
-      const updatedProperty = await propertyService.togglePropertyStatus(
-        property.id,
-      )
-      setFavorites((prev) =>
-        prev.map((p) => (p.id === updatedProperty.id ? updatedProperty : p)),
-      )
+  const toggleStatusMutation = useMutation({
+    mutationFn: propertyService.togglePropertyStatus,
+    onSuccess: (updatedProperty) => {
       toast.success(
         `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
       )
-    } catch (error) {
-      console.error(error)
+      queryClient.invalidateQueries({ queryKey: ['favorites'] })
+    },
+    onError: () => {
       toast.error('Erro ao alterar status do imóvel.')
-    } finally {
+    },
+    onSettled: () => {
       setIsToggling(null)
-    }
+    },
+  })
+
+  const handleToggleStatus = async (property: Property) => {
+    setIsToggling(property.id)
+    toggleStatusMutation.mutate(property.id)
   }
 
   const filteredFavorites = useMemo(() => {

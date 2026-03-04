@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -34,10 +35,19 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
   const { signIn } = useAuth()
+
+  const loginMutation = useMutation({
+    mutationFn: signIn,
+    onError: (e) => {
+      if (isAxiosError(e) && e.response) {
+        setErrorMessage(e.response.data?.message || 'Credenciais inválidas.')
+      } else {
+        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
+      }
+    },
+  })
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -47,22 +57,12 @@ export function LoginForm({
     },
   })
 
-  async function onSubmit(data: LoginFormValues) {
-    setIsLoading(true)
+  function onSubmit(data: LoginFormValues) {
     setErrorMessage(null)
-
-    try {
-      await signIn(data)
-    } catch (e) {
-      if (isAxiosError(e) && e.response) {
-        setErrorMessage(e.response.data?.message || 'Credenciais inválidas.')
-      } else {
-        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
-      }
-    } finally {
-      setIsLoading(false)
-    }
+    loginMutation.mutate(data)
   }
+
+  const isLoading = loginMutation.isPending
 
   return (
     <div className={cn('grid gap-6', className)} {...props}>

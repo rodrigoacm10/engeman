@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, ReactNode, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { destroyCookie, setCookie, parseCookies } from 'nookies'
 import {
@@ -12,10 +12,11 @@ import {
 import { authService } from '@/services/authService'
 import { userService } from '@/services/userService'
 import { api } from '@/lib/api'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface AuthContextType {
   isAuthenticated: boolean
-  user: User | null
+  user: User | null | undefined
   signIn: (credentials: LoginCredentials) => Promise<void>
   signUp: (credentials: RegisterCredentials) => Promise<void>
   signOut: () => void
@@ -28,34 +29,44 @@ export const AuthContext = createContext({} as AuthContextType)
 export const TOKEN_COOKIE_NAME = 'engeman_auth_token'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const queryClient = useQueryClient()
+
+  // Initialize axios header if token exists
+  useEffect(() => {
+    const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
+    if (token) {
+      api.defaults.headers.Authorization = `Bearer ${token}`
+    }
+  }, [])
 
   const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
-  const isAuthenticated = !!user || !!token
 
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { [TOKEN_COOKIE_NAME]: currentToken } = parseCookies()
+      if (!currentToken) throw new Error('No token')
+      api.defaults.headers.Authorization = `Bearer ${currentToken}`
+      return await userService.getMe()
+    },
+    enabled: !!token,
+    retry: false,
+  })
+
+  // Handle auto logout on error (invalid token)
   useEffect(() => {
-    async function loadUser() {
-      const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
-
-      if (token) {
-        try {
-          api.defaults.headers.Authorization = `Bearer ${token}`
-          const userData = await userService.getMe()
-          setUser(userData)
-        } catch (error) {
-          console.error('Failed to fetch user data:', error)
-          // Se o token for inválido, podemos deslogar
-          signOut()
-        }
-      }
-
-      setLoading(false)
+    if (isError) {
+      signOut()
     }
+  }, [isError])
 
-    loadUser()
-  }, [])
+  const isAuthenticated = !!user || !!token
+  const loading = !!token && isLoading
 
   async function signIn(credentials: LoginCredentials) {
     const { token } = await authService.login(credentials)
@@ -66,8 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     api.defaults.headers.Authorization = `Bearer ${token}`
-    const userData = await userService.getMe()
-    setUser(userData)
+    await queryClient.invalidateQueries({ queryKey: ['user'] })
     router.push('/')
   }
 
@@ -77,14 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function updateProfile(data: UserUpdateDTO) {
-    const updatedUser = await userService.updateProfile(data)
-    setUser(updatedUser)
+    await userService.updateProfile(data)
+    await queryClient.invalidateQueries({ queryKey: ['user'] })
   }
 
   function signOut() {
     destroyCookie(undefined, TOKEN_COOKIE_NAME, { path: '/' })
-    setUser(null)
     delete api.defaults.headers.Authorization
+    queryClient.removeQueries({ queryKey: ['user'] })
     router.push('/login')
   }
 

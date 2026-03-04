@@ -9,6 +9,7 @@ import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/hooks/use-auth'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -40,8 +41,7 @@ import { CreateUserFormValues, createUserSchema } from '@/schemas/user-schema'
 
 export default function MePage() {
   const { user, updateProfile, loading: authLoading } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const queryClient = useQueryClient()
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -70,46 +70,52 @@ export default function MePage() {
     }
   }, [user, form])
 
-  async function onSubmit(data: ProfileFormValues) {
-    setIsLoading(true)
-
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async (data: ProfileFormValues) => {
       const updateData = { ...data }
       if (!updateData.password) {
         delete updateData.password
       }
-
       await updateProfile(updateData)
+    },
+    onSuccess: () => {
       toast.success('Perfil atualizado com sucesso!')
       form.setValue('password', '')
-    } catch (error) {
+    },
+    onError: (error) => {
       if (isAxiosError(error) && error.response) {
         toast.error(error.response.data?.message || 'Erro ao atualizar perfil.')
       } else {
         toast.error('Ocorreu um erro inesperado. Tente novamente.')
       }
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    },
+  })
 
-  async function onCreateUser(data: CreateUserFormValues) {
-    setIsCreatingUser(true)
-
-    try {
-      await userService.createUser(data)
+  const createUserMutation = useMutation({
+    mutationFn: userService.createUser,
+    onSuccess: () => {
       toast.success('Usuário criado com sucesso!')
       createUserForm.reset()
-    } catch (error) {
+    },
+    onError: (error) => {
       if (isAxiosError(error) && error.response) {
         toast.error(error.response.data?.message || 'Erro ao criar usuário.')
       } else {
         toast.error('Ocorreu um erro inesperado. Tente novamente.')
       }
-    } finally {
-      setIsCreatingUser(false)
-    }
+    },
+  })
+
+  function onSubmit(data: ProfileFormValues) {
+    updateMutation.mutate(data)
   }
+
+  function onCreateUser(data: CreateUserFormValues) {
+    createUserMutation.mutate(data)
+  }
+
+  const isLoading = updateMutation.isPending
+  const isCreatingUser = createUserMutation.isPending
 
   if (authLoading) {
     return (
