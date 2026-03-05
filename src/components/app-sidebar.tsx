@@ -62,7 +62,6 @@ export function AppSidebar() {
   }, [])
 
   return (
-    // collapsible="icon"
     <Sidebar className="border-r border-[#ff4e00]/10">
       <SidebarHeader className="p-4">
         <Link

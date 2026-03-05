@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, ReactNode, useEffect } from 'react'
+import React, { createContext, ReactNode, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { destroyCookie, setCookie, parseCookies } from 'nookies'
 import {
@@ -32,15 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // Initialize axios header if token exists
-  useEffect(() => {
+  const [currentToken, setCurrentToken] = useState<string | null>(() => {
     const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
-    if (token) {
-      api.defaults.headers.Authorization = `Bearer ${token}`
-    }
-  }, [])
+    return token || null
+  })
 
-  const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
+  useEffect(() => {
+    if (currentToken) {
+      api.defaults.headers.Authorization = `Bearer ${currentToken}`
+    } else {
+      delete api.defaults.headers.Authorization
+    }
+  }, [currentToken])
 
   const {
     data: user,
@@ -54,19 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       api.defaults.headers.Authorization = `Bearer ${currentToken}`
       return await userService.getMe()
     },
-    enabled: !!token,
+    enabled: !!currentToken,
     retry: false,
   })
 
-  // Handle auto logout on error (invalid token)
   useEffect(() => {
     if (isError) {
       signOut()
     }
   }, [isError])
 
-  const isAuthenticated = !!user || !!token
-  const loading = !!token && isLoading
+  const isAuthenticated = !!user || !!currentToken
+  const loading = !!currentToken && isLoading
 
   async function signIn(credentials: LoginCredentials) {
     const { token } = await authService.login(credentials)
@@ -76,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       path: '/',
     })
 
+    setCurrentToken(token)
     api.defaults.headers.Authorization = `Bearer ${token}`
     await queryClient.invalidateQueries({ queryKey: ['user'] })
     router.push('/')
@@ -93,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function signOut() {
     destroyCookie(undefined, TOKEN_COOKIE_NAME, { path: '/' })
+    setCurrentToken(null)
     delete api.defaults.headers.Authorization
     queryClient.removeQueries({ queryKey: ['user'] })
     router.push('/login')

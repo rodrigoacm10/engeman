@@ -113,6 +113,7 @@ function HomeContent() {
   })
 
   const handleToggleFavorite = async (propertyId: number) => {
+    console.log('user fav ->', user)
     if (!user) {
       toast.error('Você precisa estar logado para favoritar imóveis.')
       router.push('/login')
