@@ -1,41 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useDebounce } from 'use-debounce'
-import { propertyService } from '@/services/propertyService'
-import { userService } from '@/services/userService'
-import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'sonner'
-import {
-  Property,
-  PropertyFilters,
-  PropertyType,
-  PaginatedResponse,
-} from '@/types/property'
+import { Suspense } from 'react'
+import { PropertyType } from '@/types/property'
+import { useHome } from '@/hooks/use-home'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { PropertyCard } from '@/components/property-card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { PropertyForm } from '@/components/property-form'
 import {
   Select,
   SelectContent,
@@ -43,226 +15,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 function HomeContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const [name, setName] = useState(searchParams.get('name') || '')
-  const [debouncedName] = useDebounce(name, 500)
-  const [type, setType] = useState<PropertyType | ''>(
-    (searchParams.get('type') as PropertyType) || '',
-  )
-  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
-  const [minBedrooms, setMinBedrooms] = useState(
-    searchParams.get('minBedrooms') || '',
-  )
-
-  const [page, setPage] = useState(Number(searchParams.get('page')) || 0)
-  const [size, setSize] = useState(Number(searchParams.get('size')) || 10)
-  const [sort, setSort] = useState(searchParams.get('sort') || 'id')
-
-  const [data, setData] = useState<PaginatedResponse<Property> | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const { user } = useAuth()
-  const [favorites, setFavorites] = useState<Set<number>>(new Set())
-  const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
-    new Set(),
-  )
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
-  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isToggling, setIsToggling] = useState<number | null>(null)
-
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (user) {
-        try {
-          const favs = await userService.getFavorites()
-          setFavorites(new Set(favs.map((f) => f.id)))
-        } catch (error) {
-          console.error('Failed to fetch favorites', error)
-        }
-      } else {
-        setFavorites(new Set())
-      }
-    }
-    fetchFavorites()
-  }, [user])
-
-  const handleToggleFavorite = async (propertyId: number) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para favoritar imóveis.')
-      router.push('/login')
-      return
-    }
-
-    setTogglingFavorites((prev) => new Set(prev).add(propertyId))
-    const isCurrentlyFavorite = favorites.has(propertyId)
-
-    try {
-      if (isCurrentlyFavorite) {
-        await userService.removeFavorite(propertyId)
-        setFavorites((prev) => {
-          const newFavs = new Set(prev)
-          newFavs.delete(propertyId)
-          return newFavs
-        })
-        toast.success('Imóvel removido dos favoritos.')
-      } else {
-        await userService.addFavorite(propertyId)
-        setFavorites((prev) => new Set(prev).add(propertyId))
-        toast.success('Imóvel adicionado aos favoritos.')
-      }
-    } catch (error) {
-      console.error('Failed to toggle favorite', error)
-      toast.error('Ocorreu um erro ao atualizar os favoritos.')
-    } finally {
-      setTogglingFavorites((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(propertyId)
-        return newSet
-      })
-    }
-  }
-
-  const handleOpenDialog = (property?: Property) => {
-    setEditingProperty(property || null)
-    setIsDialogOpen(true)
-  }
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    setEditingProperty(null)
-  }
-
-  const handleSuccess = () => {
-    handleCloseDialog()
-    setPage(0)
-  }
-
-  const handleDelete = async () => {
-    if (!propertyToDelete) return
-
-    setIsDeleting(true)
-    try {
-      await propertyService.deleteProperty(propertyToDelete.id)
-      toast.success('Imóvel excluído com sucesso.')
-      setData((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          content: prev.content.filter((p) => p.id !== propertyToDelete?.id),
-        }
-      })
-    } catch (error) {
-      console.error(error)
-      toast.error('Erro ao excluir imóvel.')
-    } finally {
-      setIsDeleting(false)
-      setPropertyToDelete(null)
-    }
-  }
-
-  const handleToggleStatus = async (property: Property) => {
-    setIsToggling(property.id)
-    try {
-      const updatedProperty = await propertyService.togglePropertyStatus(
-        property.id,
-      )
-      setData((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          content: prev.content.map((p) =>
-            p.id === updatedProperty.id ? updatedProperty : p,
-          ),
-        }
-      })
-      toast.success(
-        `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
-      )
-    } catch (error) {
-      console.error(error)
-      toast.error('Erro ao alterar status do imóvel.')
-    } finally {
-      setIsToggling(null)
-    }
-  }
-
-  const updateUrlParams = useCallback(() => {
-    const params = new URLSearchParams()
-
-    if (debouncedName) params.set('name', debouncedName)
-    if (type) params.set('type', type)
-    if (minPrice) params.set('minPrice', minPrice)
-    if (maxPrice) params.set('maxPrice', maxPrice)
-    if (minBedrooms) params.set('minBedrooms', minBedrooms)
-    params.set('page', page.toString())
-    params.set('size', size.toString())
-    params.set('sort', sort)
-
-    router.replace(`/?${params.toString()}`)
-  }, [
-    debouncedName,
-    type,
-    minPrice,
-    maxPrice,
-    minBedrooms,
-    page,
-    size,
-    sort,
-    router,
-  ])
-
-  useEffect(() => {
-    const fetchProperties = async () => {
-      setLoading(true)
-      try {
-        const filters: PropertyFilters = {
-          name: debouncedName || undefined,
-          type: type || undefined,
-          minPrice: minPrice ? Number(minPrice) : undefined,
-          maxPrice: maxPrice ? Number(maxPrice) : undefined,
-          minBedrooms: minBedrooms ? Number(minBedrooms) : undefined,
-          page,
-          size,
-          sort,
-        }
-
-        const response = await propertyService.getProperties(filters)
-        setData(response)
-      } catch (error) {
-        console.error('Failed to fetch properties', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProperties()
-    updateUrlParams()
-  }, [
-    debouncedName,
-    type,
-    minPrice,
-    maxPrice,
-    minBedrooms,
-    page,
-    size,
-    sort,
-    updateUrlParams,
-  ])
-
-  useEffect(() => {
-    setPage(0)
-  }, [debouncedName, type, minPrice, maxPrice, minBedrooms, size, sort])
+  const {
+    filters: { name, type, minPrice, maxPrice, minBedrooms },
+    actions: {
+      setName,
+      setType,
+      setMinPrice,
+      setMaxPrice,
+      setMinBedrooms,
+      clearFilters,
+    },
+    pagination: { page, size, sort, setPage, setSize, setSort },
+    data,
+    loading,
+    favorites,
+  } = useHome()
 
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-8">
@@ -396,15 +166,7 @@ function HomeContent() {
 
             <Button
               variant="outline"
-              onClick={() => {
-                setName('')
-                setType('')
-                setMinPrice('')
-                setMaxPrice('')
-                setMinBedrooms('')
-                setSort('id')
-                setSize(10)
-              }}
+              onClick={clearFilters}
               className="text-gray-500 hover:text-[#ff4e00]"
             >
               Limpar Filtros
@@ -434,13 +196,9 @@ function HomeContent() {
                 <PropertyCard
                   key={property.id}
                   property={property}
-                  isFavorite={favorites.has(property.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  isTogglingFavorite={togglingFavorites.has(property.id)}
-                  onEdit={handleOpenDialog}
-                  onToggleStatus={handleToggleStatus}
-                  onDelete={setPropertyToDelete}
-                  isTogglingStatus={isToggling === property.id}
+                  isFavorite={favorites.items.has(property.id)}
+                  onToggleFavorite={favorites.handleToggle}
+                  isTogglingFavorite={favorites.toggling.has(property.id)}
                 />
               ))}
             </div>
@@ -472,69 +230,9 @@ function HomeContent() {
           </>
         )}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingProperty ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
-            </DialogTitle>
-            <DialogDescription>
-              Preencha os dados do imóvel abaixo. As informações serão
-              publicadas imediatamente.
-            </DialogDescription>
-          </DialogHeader>
-          <PropertyForm
-            initialData={editingProperty}
-            onSuccess={handleSuccess}
-            onCancel={handleCloseDialog}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
-        open={!!propertyToDelete}
-        onOpenChange={(open) => !open && setPropertyToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-              imóvel
-              <span className="font-bold text-gray-900 mx-1">
-                {propertyToDelete?.name}
-              </span>
-              dos nossos servidores.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                handleDelete()
-              }}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
-              Excluir Imóvel
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
-
-import { Suspense } from 'react'
 
 export default function Home() {
   return (

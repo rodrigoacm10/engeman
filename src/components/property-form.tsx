@@ -7,6 +7,7 @@ import * as z from 'zod'
 import { Loader2, UploadCloud, Link as LinkIcon } from 'lucide-react'
 import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -28,27 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Property } from '@/types/property'
 import { propertyService } from '@/services/propertyService'
-
-const propertySchema = z.object({
-  name: z
-    .string()
-    .min(10, 'Nome deve ter pelo menos 10 caracteres')
-    .max(100, 'Máximo de 100 caracteres'),
-  description: z.string().min(5, 'A descrição é obrigatória'),
-  type: z.enum(['CASA', 'TERRENO', 'APARTAMENTO']),
-  value: z.coerce.number().positive('O valor deve ser positivo'),
-  area: z.coerce.number().positive('A área deve ser positiva'),
-  bedrooms: z.coerce.number().min(0, 'Número de quartos não pode ser negativo'),
-  address: z.string().min(5, 'O endereço é obrigatório'),
-  city: z.string().min(2, 'A cidade é obrigatória'),
-  state: z.string().length(2, 'O estado deve ter 2 letras (ex: SP)'),
-  imageUrls: z
-    .string()
-    .url('A URL da imagem deve ser válida')
-    .min(1, 'A imagem é obrigatória'),
-})
-
-type PropertyFormValues = z.infer<typeof propertySchema>
+import { PropertyFormValues, propertySchema } from '@/schemas/property-schema'
 
 interface PropertyFormProps {
   initialData?: Property | null
@@ -123,19 +104,23 @@ export function PropertyForm({
     }
   }
 
-  const onSubmit = async (data: PropertyFormValues) => {
-    setIsSubmitting(true)
-
-    try {
+  const submitMutation = useMutation({
+    mutationFn: async (data: PropertyFormValues) => {
       if (initialData) {
         await propertyService.updateProperty(initialData.id, data)
-        toast.success('Imóvel atualizado com sucesso!')
       } else {
         await propertyService.createProperty(data)
-        toast.success('Imóvel cadastrado com sucesso!')
       }
+    },
+    onSuccess: () => {
+      toast.success(
+        initialData
+          ? 'Imóvel atualizado com sucesso!'
+          : 'Imóvel cadastrado com sucesso!',
+      )
       onSuccess()
-    } catch (error) {
+    },
+    onError: (error) => {
       if (isAxiosError(error) && error.response) {
         toast.error(
           error.response.data?.message || 'Erro ao processar a requisição.',
@@ -143,10 +128,14 @@ export function PropertyForm({
       } else {
         toast.error('Ocorreu um erro inesperado.')
       }
-    } finally {
-      setIsSubmitting(false)
-    }
+    },
+  })
+
+  const onSubmit = (data: PropertyFormValues) => {
+    submitMutation.mutate(data)
   }
+
+  const isLoadingSubmit = submitMutation.isPending
 
   return (
     <Form {...form}>
@@ -428,9 +417,11 @@ export function PropertyForm({
           <Button
             type="submit"
             className="bg-[#ff4e00] hover:bg-[#e64600]"
-            disabled={isSubmitting || isUploading}
+            disabled={isLoadingSubmit || isUploading}
           >
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoadingSubmit && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {initialData ? 'Atualizar Imóvel' : 'Cadastrar Imóvel'}
           </Button>
         </div>

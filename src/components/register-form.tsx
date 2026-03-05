@@ -1,13 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
-import { isAxiosError } from 'axios'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -28,58 +22,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-
-const registerSchema = z.object({
-  name: z.string().min(2, {
-    message: 'O nome deve ter pelo menos 2 caracteres.',
-  }),
-  email: z.string().email({
-    message: 'Por favor, insira um e-mail válido.',
-  }),
-  password: z.string().min(6, {
-    message: 'A senha deve ter pelo menos 6 caracteres.',
-  }),
-})
-
-type RegisterFormValues = z.infer<typeof registerSchema>
+import { useRegisterForm } from '@/hooks/use-register-form'
 
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const { signUp } = useAuth()
-
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-    },
-  })
-
-  async function onSubmit(data: RegisterFormValues) {
-    setIsLoading(true)
-    setErrorMessage(null)
-
-    try {
-      await signUp(data)
-    } catch (e) {
-      if (isAxiosError(e) && e.response) {
-        setErrorMessage(
-          e.response.data?.message ||
-            'Erro ao registrar usuário. Verifique os dados fornecidos.',
-        )
-      } else {
-        setErrorMessage('Ocorreu um erro inesperado. Tente novamente.')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const { errorMessage, form, onSubmit, isLoading } = useRegisterForm()
 
   return (
     <div className={cn('grid gap-6', className)} {...props}>

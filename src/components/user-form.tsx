@@ -26,19 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { userService } from '@/services/userService'
-import { UserRole } from '@/types/auth'
-
-const userSchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Nome deve ter pelo menos 3 caracteres')
-    .max(100, 'Máximo de 100 caracteres'),
-  email: z.string().email('E-mail inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  role: z.enum(['ADMIN', 'CORRETOR', 'CLIENTE']),
-})
-
-type UserFormValues = z.infer<typeof userSchema>
+import { CreateUserFormValues, createUserSchema } from '@/schemas/user-schema'
 
 interface UserFormProps {
   onSuccess: () => void
@@ -48,8 +36,8 @@ interface UserFormProps {
 export function UserForm({ onSuccess, onCancel }: UserFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
+  const form = useForm<CreateUserFormValues>({
+    resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: '',
       email: '',
@@ -58,7 +46,7 @@ export function UserForm({ onSuccess, onCancel }: UserFormProps) {
     },
   })
 
-  const onSubmit = async (data: UserFormValues) => {
+  const onSubmit = async (data: CreateUserFormValues) => {
     setIsSubmitting(true)
     try {
       await userService.createUser(data)

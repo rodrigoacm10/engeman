@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -62,7 +62,6 @@ export function AppSidebar() {
   }, [])
 
   return (
-    // collapsible="icon"
     <Sidebar className="border-r border-[#ff4e00]/10">
       <SidebarHeader className="p-4">
         <Link

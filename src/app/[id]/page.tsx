@@ -1,10 +1,11 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { propertyService } from '@/services/propertyService'
 import { Property } from '@/types/property'
 import { Button } from '@/components/ui/button'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   ArrowLeft,
@@ -23,26 +24,13 @@ export default function PropertyDetailsPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
-  const [property, setProperty] = useState<Property | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchProperty = async () => {
-      try {
-        const data = await propertyService.getPropertyById(Number(id))
-        setProperty(data)
-      } catch (error) {
-        console.error('Failed to fetch property details:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (id) {
-      fetchProperty()
-    }
-  }, [id])
+  const { data: property, isLoading } = useQuery({
+    queryKey: ['property', id],
+    queryFn: () => propertyService.getPropertyById(Number(id)),
+    enabled: !!id,
+  })
 
   if (isLoading) {
     return (
