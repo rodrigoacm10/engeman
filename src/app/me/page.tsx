@@ -1,16 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Loader2, User as UserIcon, Mail, Shield, Save } from 'lucide-react'
-import { isAxiosError } from 'axios'
-import { toast } from 'sonner'
-
+import { Loader2, User as UserIcon, Mail, Shield } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -18,104 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { userService } from '@/services/userService'
-import { UserPlus, Plus } from 'lucide-react'
-import { ProfileFormValues, profileSchema } from '@/schemas/profile-schema'
-import { CreateUserFormValues, createUserSchema } from '@/schemas/user-schema'
+import { UserPlus } from 'lucide-react'
+import { ProfileForm } from '@/components/profile-form'
+import { CreateUserForm } from '@/components/create-user-form'
 
 export default function MePage() {
-  const { user, updateProfile, loading: authLoading } = useAuth()
-  const queryClient = useQueryClient()
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: '',
-      password: '',
-    },
-  })
-
-  const createUserForm = useForm<CreateUserFormValues>({
-    resolver: zodResolver(createUserSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      role: 'CLIENTE',
-    },
-  })
-
-  useEffect(() => {
-    if (user) {
-      form.reset({
-        name: user.name,
-        password: '',
-      })
-    }
-  }, [user, form])
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: ProfileFormValues) => {
-      const updateData = { ...data }
-      if (!updateData.password) {
-        delete updateData.password
-      }
-      await updateProfile(updateData)
-    },
-    onSuccess: () => {
-      toast.success('Perfil atualizado com sucesso!')
-      form.setValue('password', '')
-    },
-    onError: (error) => {
-      if (isAxiosError(error) && error.response) {
-        toast.error(error.response.data?.message || 'Erro ao atualizar perfil.')
-      } else {
-        toast.error('Ocorreu um erro inesperado. Tente novamente.')
-      }
-    },
-  })
-
-  const createUserMutation = useMutation({
-    mutationFn: userService.createUser,
-    onSuccess: () => {
-      toast.success('Usuário criado com sucesso!')
-      createUserForm.reset()
-    },
-    onError: (error) => {
-      if (isAxiosError(error) && error.response) {
-        toast.error(error.response.data?.message || 'Erro ao criar usuário.')
-      } else {
-        toast.error('Ocorreu um erro inesperado. Tente novamente.')
-      }
-    },
-  })
-
-  function onSubmit(data: ProfileFormValues) {
-    updateMutation.mutate(data)
-  }
-
-  function onCreateUser(data: CreateUserFormValues) {
-    createUserMutation.mutate(data)
-  }
-
-  const isLoading = updateMutation.isPending
-  const isCreatingUser = createUserMutation.isPending
+  const { user, loading: authLoading } = useAuth()
 
   if (authLoading) {
     return (
@@ -180,60 +80,7 @@ export default function MePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Seu nome" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nova Senha (opcional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
-                        />
-                      </FormControl>
-                      <CardDescription>
-                        Deixe em branco para manter a senha atual.
-                      </CardDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#ff4e00] hover:bg-[#e64600] text-white"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  Salvar Alterações
-                </Button>
-              </form>
-            </Form>
+            <ProfileForm />
           </CardContent>
         </Card>
       </div>
@@ -255,101 +102,7 @@ export default function MePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...createUserForm}>
-                <form
-                  onSubmit={createUserForm.handleSubmit(onCreateUser)}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                >
-                  <FormField
-                    control={createUserForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nome do usuário" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={createUserForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>E-mail</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="email@exemplo.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={createUserForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={createUserForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nível de Acesso</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um cargo" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="ADMIN">Administrador</SelectItem>
-                            <SelectItem value="CORRETOR">Corretor</SelectItem>
-                            <SelectItem value="CLIENTE">Cliente</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="md:col-span-2 bg-[#ff4e00] hover:bg-[#e64600] text-white"
-                    disabled={isCreatingUser}
-                  >
-                    {isCreatingUser ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="mr-2 h-4 w-4" />
-                    )}
-                    Criar Usuário
-                  </Button>
-                </form>
-              </Form>
+              <CreateUserForm />
             </CardContent>
           </Card>
         </div>

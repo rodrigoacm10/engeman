@@ -32,10 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const [currentToken, setCurrentToken] = useState<string | null>(() => {
+  const [currentToken, setCurrentToken] = useState<string | null>(null)
+
+  useEffect(() => {
     const { [TOKEN_COOKIE_NAME]: token } = parseCookies()
-    return token || null
-  })
+    if (token) {
+      setCurrentToken(token)
+    }
+  }, [])
 
   useEffect(() => {
     if (currentToken) {
