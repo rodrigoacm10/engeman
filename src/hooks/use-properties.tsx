@@ -15,7 +15,6 @@ export function useProperties() {
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  // Auth Protection
   useEffect(() => {
     if (user && user.role === 'CLIENTE') {
       toast.error('Você não tem permissão para acessar esta página.')
@@ -23,7 +22,6 @@ export function useProperties() {
     }
   }, [user, router])
 
-  // Data Fetching
   const { data: properties = [], isLoading: loading } = useQuery({
     queryKey: ['userProperties'],
     queryFn: async () => {
@@ -37,7 +35,6 @@ export function useProperties() {
     enabled: !!user && user.role !== 'CLIENTE',
   })
 
-  // Handlers
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
   }
@@ -52,7 +49,6 @@ export function useProperties() {
     queryClient.invalidateQueries({ queryKey: ['properties'] })
   }
 
-  // Filtering
   const filteredProperties = useMemo(() => {
     if (!search.trim()) return properties
     const lowerSearch = search.toLowerCase()
