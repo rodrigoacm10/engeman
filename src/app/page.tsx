@@ -1,14 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useDebounce } from 'use-debounce'
-import { propertyService } from '@/services/propertyService'
-import { userService } from '@/services/userService'
-import { useAuth } from '@/hooks/use-auth'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Property, PropertyFilters, PropertyType } from '@/types/property'
+import { Suspense } from 'react'
+import { PropertyType } from '@/types/property'
+import { useHome } from '@/hooks/use-home'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -42,192 +36,24 @@ import {
 import { Loader2, Trash2 } from 'lucide-react'
 
 function HomeContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const [name, setName] = useState(searchParams.get('name') || '')
-  const [debouncedName] = useDebounce(name, 500)
-  const [type, setType] = useState<PropertyType | ''>(
-    (searchParams.get('type') as PropertyType) || '',
-  )
-  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
-  const [minBedrooms, setMinBedrooms] = useState(
-    searchParams.get('minBedrooms') || '',
-  )
-
-  const [page, setPage] = useState(Number(searchParams.get('page')) || 0)
-  const [size, setSize] = useState(Number(searchParams.get('size')) || 10)
-  const [sort, setSort] = useState(searchParams.get('sort') || 'id')
-
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
-    new Set(),
-  )
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
-  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isToggling, setIsToggling] = useState<number | null>(null)
-
-  const { data: favoritesList } = useQuery({
-    queryKey: ['favorites'],
-    queryFn: userService.getFavorites,
-    enabled: !!user,
-  })
-
-  const favorites = new Set(favoritesList?.map((f) => f.id) || [])
-
-  const toggleFavoriteMutation = useMutation({
-    mutationFn: async (propertyId: number) => {
-      const isCurrentlyFavorite = favorites.has(propertyId)
-      if (isCurrentlyFavorite) {
-        await userService.removeFavorite(propertyId)
-      } else {
-        await userService.addFavorite(propertyId)
-      }
-      return { propertyId, isCurrentlyFavorite }
+  const {
+    filters: { name, type, minPrice, maxPrice, minBedrooms },
+    actions: {
+      setName,
+      setType,
+      setMinPrice,
+      setMaxPrice,
+      setMinBedrooms,
+      clearFilters,
     },
-    onSuccess: ({ isCurrentlyFavorite }) => {
-      queryClient.invalidateQueries({ queryKey: ['favorites'] })
-      if (isCurrentlyFavorite) {
-        toast.success('Imóvel removido dos favoritos.')
-      } else {
-        toast.success('Imóvel adicionado aos favoritos.')
-      }
-    },
-    onError: () => {
-      toast.error('Ocorreu um erro ao atualizar os favoritos.')
-    },
-    onSettled: (_, __, propertyId) => {
-      setTogglingFavorites((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(propertyId)
-        return newSet
-      })
-    },
-  })
-
-  const handleToggleFavorite = async (propertyId: number) => {
-    console.log('user fav ->', user)
-    if (!user) {
-      toast.error('Você precisa estar logado para favoritar imóveis.')
-      router.push('/login')
-      return
-    }
-    setTogglingFavorites((prev) => new Set(prev).add(propertyId))
-    toggleFavoriteMutation.mutate(propertyId)
-  }
-
-  const handleOpenDialog = (property?: Property) => {
-    setEditingProperty(property || null)
-    setIsDialogOpen(true)
-  }
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    setEditingProperty(null)
-  }
-
-  const handleSuccess = () => {
-    handleCloseDialog()
-    queryClient.invalidateQueries({ queryKey: ['properties'] })
-  }
-
-  const deleteMutation = useMutation({
-    mutationFn: propertyService.deleteProperty,
-    onSuccess: () => {
-      toast.success('Imóvel excluído com sucesso.')
-      queryClient.invalidateQueries({ queryKey: ['properties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao excluir imóvel.')
-    },
-    onSettled: () => {
-      setIsDeleting(false)
-      setPropertyToDelete(null)
-    },
-  })
-
-  const handleDelete = async () => {
-    if (!propertyToDelete) return
-    setIsDeleting(true)
-    deleteMutation.mutate(propertyToDelete.id)
-  }
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: propertyService.togglePropertyStatus,
-    onSuccess: (updatedProperty) => {
-      toast.success(
-        `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
-      )
-      queryClient.invalidateQueries({ queryKey: ['properties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao alterar status do imóvel.')
-    },
-    onSettled: () => {
-      setIsToggling(null)
-    },
-  })
-
-  const handleToggleStatus = async (property: Property) => {
-    setIsToggling(property.id)
-    toggleStatusMutation.mutate(property.id)
-  }
-
-  const filters: PropertyFilters = {
-    name: debouncedName || undefined,
-    type: type || undefined,
-    minPrice: minPrice ? Number(minPrice) : undefined,
-    maxPrice: maxPrice ? Number(maxPrice) : undefined,
-    minBedrooms: minBedrooms ? Number(minBedrooms) : undefined,
-    page,
-    size,
-    sort,
-  }
-
-  const { data, isLoading: loading } = useQuery({
-    queryKey: ['properties', filters],
-    queryFn: () => propertyService.getProperties(filters),
-  })
-
-  const updateUrlParams = useCallback(() => {
-    const params = new URLSearchParams()
-
-    if (debouncedName) params.set('name', debouncedName)
-    if (type) params.set('type', type)
-    if (minPrice) params.set('minPrice', minPrice)
-    if (maxPrice) params.set('maxPrice', maxPrice)
-    if (minBedrooms) params.set('minBedrooms', minBedrooms)
-    params.set('page', page.toString())
-    params.set('size', size.toString())
-    params.set('sort', sort)
-
-    router.replace(`/?${params.toString()}`)
-  }, [
-    debouncedName,
-    type,
-    minPrice,
-    maxPrice,
-    minBedrooms,
-    page,
-    size,
-    sort,
-    router,
-  ])
-
-  useEffect(() => {
-    updateUrlParams()
-  }, [updateUrlParams])
-
-  useEffect(() => {
-    setPage(0)
-  }, [debouncedName, type, minPrice, maxPrice, minBedrooms, size, sort])
+    pagination: { page, size, sort, setPage, setSize, setSort },
+    data,
+    loading,
+    favorites,
+    dialog,
+    deleteAlert,
+    status,
+  } = useHome()
 
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-8">
@@ -361,15 +187,7 @@ function HomeContent() {
 
             <Button
               variant="outline"
-              onClick={() => {
-                setName('')
-                setType('')
-                setMinPrice('')
-                setMaxPrice('')
-                setMinBedrooms('')
-                setSort('id')
-                setSize(10)
-              }}
+              onClick={clearFilters}
               className="text-gray-500 hover:text-[#ff4e00]"
             >
               Limpar Filtros
@@ -399,13 +217,13 @@ function HomeContent() {
                 <PropertyCard
                   key={property.id}
                   property={property}
-                  isFavorite={favorites.has(property.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  isTogglingFavorite={togglingFavorites.has(property.id)}
-                  onEdit={handleOpenDialog}
-                  onToggleStatus={handleToggleStatus}
-                  onDelete={setPropertyToDelete}
-                  isTogglingStatus={isToggling === property.id}
+                  isFavorite={favorites.items.has(property.id)}
+                  onToggleFavorite={favorites.handleToggle}
+                  isTogglingFavorite={favorites.toggling.has(property.id)}
+                  onEdit={dialog.handleOpen}
+                  onToggleStatus={status.handleToggle}
+                  onDelete={deleteAlert.setPropertyToDelete}
+                  isTogglingStatus={status.isToggling === property.id}
                 />
               ))}
             </div>
@@ -438,11 +256,13 @@ function HomeContent() {
         )}
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={dialog.isOpen} onOpenChange={dialog.setIsOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingProperty ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
+              {dialog.editingProperty
+                ? 'Editar Imóvel'
+                : 'Cadastrar Novo Imóvel'}
             </DialogTitle>
             <DialogDescription>
               Preencha os dados do imóvel abaixo. As informações serão
@@ -450,16 +270,16 @@ function HomeContent() {
             </DialogDescription>
           </DialogHeader>
           <PropertyForm
-            initialData={editingProperty}
-            onSuccess={handleSuccess}
-            onCancel={handleCloseDialog}
+            initialData={dialog.editingProperty}
+            onSuccess={dialog.handleSuccess}
+            onCancel={dialog.handleClose}
           />
         </DialogContent>
       </Dialog>
 
       <AlertDialog
-        open={!!propertyToDelete}
-        onOpenChange={(open) => !open && setPropertyToDelete(null)}
+        open={!!deleteAlert.propertyToDelete}
+        onOpenChange={(open) => !open && deleteAlert.setPropertyToDelete(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -468,24 +288,24 @@ function HomeContent() {
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o
               imóvel
               <span className="font-bold text-gray-900 mx-1">
-                {propertyToDelete?.name}
+                {deleteAlert.propertyToDelete?.name}
               </span>
               dos nossos servidores.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
+            <AlertDialogCancel disabled={deleteAlert.isDeleting}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault()
-                handleDelete()
+                deleteAlert.handleDelete()
               }}
               className="bg-red-600 hover:bg-red-700"
-              disabled={isDeleting}
+              disabled={deleteAlert.isDeleting}
             >
-              {isDeleting ? (
+              {deleteAlert.isDeleting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -498,8 +318,6 @@ function HomeContent() {
     </div>
   )
 }
-
-import { Suspense } from 'react'
 
 export default function Home() {
   return (
