@@ -1,13 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { propertyService } from '@/services/propertyService'
-import { Property } from '@/types/property'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { useAuth } from '@/hooks/use-auth'
-
+import { useProperties } from '@/hooks/use-properties'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,52 +17,18 @@ import { PropertyCard } from '@/components/property-card'
 import { Loader2, Plus, Search } from 'lucide-react'
 
 export default function MyPropertiesPage() {
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
-  const [search, setSearch] = useState('')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-
-  useEffect(() => {
-    if (user && user.role === 'CLIENTE') {
-      toast.error('Você não tem permissão para acessar esta página.')
-      router.push('/')
-    }
-  }, [user, router])
-
-  const { data: properties = [], isLoading: loading } = useQuery({
-    queryKey: ['userProperties'],
-    queryFn: async () => {
-      try {
-        return await propertyService.getUserProperties()
-      } catch (error) {
-        toast.error('Não foi possível carregar seus imóveis.')
-        throw error
-      }
-    },
-    enabled: !!user && user.role !== 'CLIENTE',
-  })
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-  }
-
-  const handleSuccess = () => {
-    handleCloseDialog()
-    queryClient.invalidateQueries({ queryKey: ['userProperties'] })
-    queryClient.invalidateQueries({ queryKey: ['properties'] })
-  }
-
-  const filteredProperties = useMemo(() => {
-    if (!search.trim()) return properties
-    const lowerSearch = search.toLowerCase()
-    return properties.filter(
-      (p) =>
-        p.name.toLowerCase().includes(lowerSearch) ||
-        p.city.toLowerCase().includes(lowerSearch) ||
-        p.state.toLowerCase().includes(lowerSearch),
-    )
-  }, [properties, search])
+  const {
+    properties,
+    filteredProperties,
+    loading,
+    search,
+    setSearch,
+    isDialogOpen,
+    setIsDialogOpen,
+    handleOpenDialog,
+    handleCloseDialog,
+    handleSuccess,
+  } = useProperties()
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -87,7 +46,7 @@ export default function MyPropertiesPage() {
           <DialogTrigger asChild>
             <Button
               className="bg-[#ff4e00] hover:bg-[#e64600]"
-              onClick={() => setIsDialogOpen(true)}
+              onClick={handleOpenDialog}
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Imóvel
@@ -142,7 +101,7 @@ export default function MyPropertiesPage() {
           </p>
           <Button
             className="bg-[#ff4e00] hover:bg-[#e64600]"
-            onClick={() => setIsDialogOpen(true)}
+            onClick={handleOpenDialog}
           >
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar meu primeiro Imóvel
