@@ -25,17 +25,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { PropertyDialog } from '@/components/property-dialog'
+import { PropertyDeleteDialog } from '@/components/property-delete-dialog'
 import { usePropertyCardAction } from '@/hooks/use-property-card-action'
 
 interface PropertyCardProps {
@@ -240,44 +231,13 @@ export function PropertyCard({
             onCancel={editDialog.handleClose}
           />
 
-          <AlertDialog
+          <PropertyDeleteDialog
             open={deleteAlert.isOpen}
             onOpenChange={deleteAlert.setIsOpen}
-          >
-            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta ação não pode ser desfeita. Isso excluirá permanentemente
-                  o imóvel
-                  <span className="font-bold text-gray-900 mx-1">
-                    {property.name}
-                  </span>
-                  dos nossos servidores.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={deleteAlert.isDeleting}>
-                  Cancelar
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    e.preventDefault()
-                    deleteAlert.handleDelete()
-                  }}
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleteAlert.isDeleting}
-                >
-                  {deleteAlert.isDeleting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4 mr-2" />
-                  )}
-                  Excluir Imóvel
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            propertyName={property.name}
+            onDelete={deleteAlert.handleDelete}
+            isDeleting={deleteAlert.isDeleting}
+          />
         </>
       )}
     </>
