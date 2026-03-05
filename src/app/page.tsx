@@ -9,31 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { PropertyCard } from '@/components/property-card'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { PropertyForm } from '@/components/property-form'
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 function HomeContent() {
   const {
@@ -50,9 +32,6 @@ function HomeContent() {
     data,
     loading,
     favorites,
-    dialog,
-    deleteAlert,
-    status,
   } = useHome()
 
   return (
@@ -220,10 +199,6 @@ function HomeContent() {
                   isFavorite={favorites.items.has(property.id)}
                   onToggleFavorite={favorites.handleToggle}
                   isTogglingFavorite={favorites.toggling.has(property.id)}
-                  onEdit={dialog.handleOpen}
-                  onToggleStatus={status.handleToggle}
-                  onDelete={deleteAlert.setPropertyToDelete}
-                  isTogglingStatus={status.isToggling === property.id}
                 />
               ))}
             </div>
@@ -255,66 +230,6 @@ function HomeContent() {
           </>
         )}
       </div>
-
-      <Dialog open={dialog.isOpen} onOpenChange={dialog.setIsOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {dialog.editingProperty
-                ? 'Editar Imóvel'
-                : 'Cadastrar Novo Imóvel'}
-            </DialogTitle>
-            <DialogDescription>
-              Preencha os dados do imóvel abaixo. As informações serão
-              publicadas imediatamente.
-            </DialogDescription>
-          </DialogHeader>
-          <PropertyForm
-            initialData={dialog.editingProperty}
-            onSuccess={dialog.handleSuccess}
-            onCancel={dialog.handleClose}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
-        open={!!deleteAlert.propertyToDelete}
-        onOpenChange={(open) => !open && deleteAlert.setPropertyToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-              imóvel
-              <span className="font-bold text-gray-900 mx-1">
-                {deleteAlert.propertyToDelete?.name}
-              </span>
-              dos nossos servidores.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteAlert.isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                deleteAlert.handleDelete()
-              }}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={deleteAlert.isDeleting}
-            >
-              {deleteAlert.isDeleting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
-              Excluir Imóvel
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

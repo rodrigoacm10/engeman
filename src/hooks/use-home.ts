@@ -6,7 +6,7 @@ import { userService } from '@/services/userService'
 import { useAuth } from '@/hooks/use-auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Property, PropertyFilters, PropertyType } from '@/types/property'
+import { PropertyFilters, PropertyType } from '@/types/property'
 
 export function useHome() {
   const router = useRouter()
@@ -32,14 +32,6 @@ export function useHome() {
   const [togglingFavorites, setTogglingFavorites] = useState<Set<number>>(
     new Set(),
   )
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
-  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isToggling, setIsToggling] = useState<number | null>(null)
 
   const { data: favoritesList } = useQuery({
     queryKey: ['favorites'],
@@ -80,7 +72,6 @@ export function useHome() {
   })
 
   const handleToggleFavorite = async (propertyId: number) => {
-    console.log('user fav ->', user)
     if (!user) {
       toast.error('Você precisa estar logado para favoritar imóveis.')
       router.push('/login')
@@ -88,63 +79,6 @@ export function useHome() {
     }
     setTogglingFavorites((prev) => new Set(prev).add(propertyId))
     toggleFavoriteMutation.mutate(propertyId)
-  }
-
-  const handleOpenDialog = (property?: Property) => {
-    setEditingProperty(property || null)
-    setIsDialogOpen(true)
-  }
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    setEditingProperty(null)
-  }
-
-  const handleSuccess = () => {
-    handleCloseDialog()
-    queryClient.invalidateQueries({ queryKey: ['properties'] })
-  }
-
-  const deleteMutation = useMutation({
-    mutationFn: propertyService.deleteProperty,
-    onSuccess: () => {
-      toast.success('Imóvel excluído com sucesso.')
-      queryClient.invalidateQueries({ queryKey: ['properties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao excluir imóvel.')
-    },
-    onSettled: () => {
-      setIsDeleting(false)
-      setPropertyToDelete(null)
-    },
-  })
-
-  const handleDelete = async () => {
-    if (!propertyToDelete) return
-    setIsDeleting(true)
-    deleteMutation.mutate(propertyToDelete.id)
-  }
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: propertyService.togglePropertyStatus,
-    onSuccess: (updatedProperty) => {
-      toast.success(
-        `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
-      )
-      queryClient.invalidateQueries({ queryKey: ['properties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao alterar status do imóvel.')
-    },
-    onSettled: () => {
-      setIsToggling(null)
-    },
-  })
-
-  const handleToggleStatus = async (property: Property) => {
-    setIsToggling(property.id)
-    toggleStatusMutation.mutate(property.id)
   }
 
   const filters: PropertyFilters = {
@@ -223,24 +157,6 @@ export function useHome() {
       items: favorites,
       toggling: togglingFavorites,
       handleToggle: handleToggleFavorite,
-    },
-    dialog: {
-      isOpen: isDialogOpen,
-      setIsOpen: setIsDialogOpen,
-      editingProperty,
-      handleOpen: handleOpenDialog,
-      handleClose: handleCloseDialog,
-      handleSuccess,
-    },
-    deleteAlert: {
-      propertyToDelete,
-      setPropertyToDelete,
-      isDeleting,
-      handleDelete,
-    },
-    status: {
-      isToggling,
-      handleToggle: handleToggleStatus,
     },
   }
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { propertyService } from '@/services/propertyService'
 import { Property } from '@/types/property'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -19,16 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { PropertyForm } from '@/components/property-form'
 import { PropertyCard } from '@/components/property-card'
 import { Loader2, Plus, Search } from 'lucide-react'
@@ -39,7 +29,6 @@ export default function MyPropertiesPage() {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
 
   useEffect(() => {
     if (user && user.role === 'CLIENTE') {
@@ -47,13 +36,6 @@ export default function MyPropertiesPage() {
       router.push('/')
     }
   }, [user, router])
-
-  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const [isToggling, setIsToggling] = useState<number | null>(null)
 
   const { data: properties = [], isLoading: loading } = useQuery({
     queryKey: ['userProperties'],
@@ -68,61 +50,14 @@ export default function MyPropertiesPage() {
     enabled: !!user && user.role !== 'CLIENTE',
   })
 
-  const handleOpenDialog = (property?: Property) => {
-    setEditingProperty(property || null)
-    setIsDialogOpen(true)
-  }
-
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
-    setEditingProperty(null)
   }
 
   const handleSuccess = () => {
     handleCloseDialog()
     queryClient.invalidateQueries({ queryKey: ['userProperties'] })
-  }
-
-  const deleteMutation = useMutation({
-    mutationFn: propertyService.deleteProperty,
-    onSuccess: () => {
-      toast.success('Imóvel excluído com sucesso.')
-      queryClient.invalidateQueries({ queryKey: ['userProperties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao excluir imóvel.')
-    },
-    onSettled: () => {
-      setIsDeleting(false)
-      setPropertyToDelete(null)
-    },
-  })
-
-  const handleDelete = async () => {
-    if (!propertyToDelete) return
-    setIsDeleting(true)
-    deleteMutation.mutate(propertyToDelete.id)
-  }
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: propertyService.togglePropertyStatus,
-    onSuccess: (updatedProperty) => {
-      toast.success(
-        `Imóvel ${updatedProperty.active ? 'ativado' : 'desativado'} com sucesso!`,
-      )
-      queryClient.invalidateQueries({ queryKey: ['userProperties'] })
-    },
-    onError: () => {
-      toast.error('Erro ao alterar status do imóvel.')
-    },
-    onSettled: () => {
-      setIsToggling(null)
-    },
-  })
-
-  const handleToggleStatus = async (property: Property) => {
-    setIsToggling(property.id)
-    toggleStatusMutation.mutate(property.id)
+    queryClient.invalidateQueries({ queryKey: ['properties'] })
   }
 
   const filteredProperties = useMemo(() => {
@@ -152,24 +87,25 @@ export default function MyPropertiesPage() {
           <DialogTrigger asChild>
             <Button
               className="bg-[#ff4e00] hover:bg-[#e64600]"
-              onClick={() => handleOpenDialog()}
+              onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Imóvel
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className="max-w-3xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <DialogHeader>
-              <DialogTitle>
-                {editingProperty ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
-              </DialogTitle>
+              <DialogTitle>Cadastrar Novo Imóvel</DialogTitle>
               <DialogDescription>
                 Preencha os dados do imóvel abaixo. As informações serão
                 publicadas imediatamente.
               </DialogDescription>
             </DialogHeader>
             <PropertyForm
-              initialData={editingProperty}
+              initialData={null}
               onSuccess={handleSuccess}
               onCancel={handleCloseDialog}
             />
@@ -206,7 +142,7 @@ export default function MyPropertiesPage() {
           </p>
           <Button
             className="bg-[#ff4e00] hover:bg-[#e64600]"
-            onClick={() => handleOpenDialog()}
+            onClick={() => setIsDialogOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar meu primeiro Imóvel
@@ -224,54 +160,10 @@ export default function MyPropertiesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredProperties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              onEdit={handleOpenDialog}
-              onToggleStatus={handleToggleStatus}
-              onDelete={setPropertyToDelete}
-              isTogglingStatus={isToggling === property.id}
-            />
+            <PropertyCard key={property.id} property={property} />
           ))}
         </div>
       )}
-
-      <AlertDialog
-        open={!!propertyToDelete}
-        onOpenChange={(open) => !open && setPropertyToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-              imóvel
-              <span className="font-bold text-gray-900 mx-1">
-                {propertyToDelete?.name}
-              </span>
-              dos nossos servidores.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                handleDelete()
-              }}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : null}
-              Sim, Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
