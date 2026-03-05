@@ -1,19 +1,11 @@
 'use client'
 
 import { useProperties } from '@/hooks/use-properties'
+import { PropertyDialog } from '@/components/property-dialog'
+import { PropertyCard } from '@/components/property-card'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { PropertyForm } from '@/components/property-form'
-import { PropertyCard } from '@/components/property-card'
 import { Loader2, Plus, Search } from 'lucide-react'
 
 export default function MyPropertiesPage() {
@@ -42,8 +34,13 @@ export default function MyPropertiesPage() {
           </p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
+        <PropertyDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          initialData={null}
+          onSuccess={handleSuccess}
+          onCancel={handleCloseDialog}
+          trigger={
             <Button
               className="bg-[#ff4e00] hover:bg-[#e64600]"
               onClick={handleOpenDialog}
@@ -51,25 +48,8 @@ export default function MyPropertiesPage() {
               <Plus className="w-4 h-4 mr-2" />
               Novo Imóvel
             </Button>
-          </DialogTrigger>
-          <DialogContent
-            className="max-w-3xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <DialogHeader>
-              <DialogTitle>Cadastrar Novo Imóvel</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do imóvel abaixo. As informações serão
-                publicadas imediatamente.
-              </DialogDescription>
-            </DialogHeader>
-            <PropertyForm
-              initialData={null}
-              onSuccess={handleSuccess}
-              onCancel={handleCloseDialog}
-            />
-          </DialogContent>
-        </Dialog>
+          }
+        />
       </div>
 
       <Card className="bg-white/50 backdrop-blur border-[#ff4e00]/10 mb-8">

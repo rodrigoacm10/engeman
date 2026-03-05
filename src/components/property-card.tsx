@@ -26,13 +26,6 @@ import {
 import { cn } from '@/lib/utils'
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -42,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { PropertyForm } from '@/components/property-form'
+import { PropertyDialog } from '@/components/property-dialog'
 import { usePropertyCardAction } from '@/hooks/use-property-card-action'
 
 interface PropertyCardProps {
@@ -239,25 +232,13 @@ export function PropertyCard({
 
       {showActionsMenu && (
         <>
-          <Dialog open={editDialog.isOpen} onOpenChange={editDialog.setIsOpen}>
-            <DialogContent
-              className="max-w-3xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DialogHeader>
-                <DialogTitle>Editar Imóvel</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados do imóvel abaixo. As informações serão
-                  publicadas imediatamente.
-                </DialogDescription>
-              </DialogHeader>
-              <PropertyForm
-                initialData={property}
-                onSuccess={editDialog.handleSuccess}
-                onCancel={editDialog.handleClose}
-              />
-            </DialogContent>
-          </Dialog>
+          <PropertyDialog
+            open={editDialog.isOpen}
+            onOpenChange={editDialog.setIsOpen}
+            initialData={property}
+            onSuccess={editDialog.handleSuccess}
+            onCancel={editDialog.handleClose}
+          />
 
           <AlertDialog
             open={deleteAlert.isOpen}
