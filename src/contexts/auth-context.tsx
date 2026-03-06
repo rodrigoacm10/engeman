@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentToken(token)
     api.defaults.headers.Authorization = `Bearer ${token}`
     await queryClient.invalidateQueries({ queryKey: ['user'] })
-    router.push('/')
+    router.push('/list')
   }
 
   async function signUp(credentials: RegisterCredentials) {
