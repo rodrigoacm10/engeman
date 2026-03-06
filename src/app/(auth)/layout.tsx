@@ -10,7 +10,7 @@ export default function AuthLayout({
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex gap-2 justify-start">
           <a
-            href="/"
+            href="/list"
             className="flex items-center gap-2 font-medium text-[#ff4e00]"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff4e00] text-white">

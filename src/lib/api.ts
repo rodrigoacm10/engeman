@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { parseCookies } from 'nookies'
 
-const API_BASE_URL = 'https://desafio-tecnico-engeman.onrender.com'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 export const TOKEN_COOKIE_NAME = 'engeman_auth_token'
 
 export const api = axios.create({
