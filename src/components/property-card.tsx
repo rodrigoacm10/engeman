@@ -57,7 +57,7 @@ export function PropertyCard({
     <>
       <Card
         className="overflow-hidden hover:shadow-lg transition-all duration-300 border-gray-200 relative group cursor-pointer hover:scale-105"
-        onClick={() => router.push(`/${property.id}`)}
+        onClick={() => router.push(`/list/${property.id}`)}
       >
         <div className="h-48 bg-gray-200 relative overflow-hidden">
           {property.imageUrls ? (
