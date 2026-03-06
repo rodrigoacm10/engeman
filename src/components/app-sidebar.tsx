@@ -29,7 +29,7 @@ import { usePathname } from 'next/navigation'
 const navItems = [
   {
     title: 'Início',
-    url: '/',
+    url: '/list',
     icon: Home,
   },
   {
@@ -65,7 +65,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-[#ff4e00]/10">
       <SidebarHeader className="p-4">
         <Link
-          href="/"
+          href="/list"
           className="flex items-center gap-2 font-bold text-[#ff4e00] text-xl"
         >
           <div className="w-8 h-8 rounded bg-[#ff4e00] flex items-center justify-center text-white">

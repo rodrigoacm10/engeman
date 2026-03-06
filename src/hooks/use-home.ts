@@ -109,7 +109,7 @@ export function useHome() {
     params.set('size', size.toString())
     params.set('sort', sort)
 
-    router.replace(`/?${params.toString()}`)
+    router.replace(`/list?${params.toString()}`)
   }, [
     debouncedName,
     type,

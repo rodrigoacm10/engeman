@@ -86,11 +86,12 @@ O projeto atende **100% dos requisitos propostos**, divididos nas seguintes áre
    ```
 
 3. **Configure as Variáveis de Ambiente**
-   Crie um arquivo `.env` na raiz do projeto contendo as seguintes variáveis (substitua com suas próprias chaves do Cloudinary para habilitar o upload de imagens):
+   Crie um arquivo `.env` na raiz do projeto utilizando o arquivo `.env.example` como base. Certifique-se de configurar as seguintes variáveis:
 
    ```env
    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=seu_cloud_name
    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=seu_upload_preset
+   NEXT_PUBLIC_API_URL=https://sua-api.com
    ```
 
 4. **Inicie o servidor de desenvolvimento**
