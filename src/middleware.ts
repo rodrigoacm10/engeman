@@ -7,33 +7,28 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value
 
-  const isPublicPage =
-    pathname.startsWith('/login') || pathname.startsWith('/register')
+  const publicPages = ['/login', '/register']
+  const isPublicPage = publicPages.some(
+    (page) => pathname === page || pathname.startsWith(`${page}/`),
+  )
+
   const isRoot = pathname === '/'
 
-  const isProtectedRoute =
-    pathname === '/list' ||
-    pathname.startsWith('/me') ||
-    pathname.startsWith('/properties') ||
-    pathname.startsWith('/favorites')
-
-  if (isRoot) {
-    return NextResponse.redirect(new URL('/list', request.url))
-  }
-
-  if (isPublicPage && token) {
-    return NextResponse.redirect(new URL('/list', request.url))
-  }
-
-  if (isProtectedRoute && !token) {
+  if (!token && !isPublicPage) {
     const url = new URL('/login', request.url)
-    url.searchParams.set('from', pathname)
+    if (!isRoot) {
+      url.searchParams.set('from', pathname)
+    }
     return NextResponse.redirect(url)
+  }
+
+  if (token && (isPublicPage || isRoot)) {
+    return NextResponse.redirect(new URL('/list', request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/', '/((?!_next|_vercel|.*\\..*).*)'],
 }
