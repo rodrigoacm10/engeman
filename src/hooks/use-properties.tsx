@@ -18,7 +18,7 @@ export function useProperties() {
   useEffect(() => {
     if (user && user.role === 'CLIENTE') {
       toast.error('Você não tem permissão para acessar esta página.')
-      router.push('/')
+      router.push('/list')
     }
   }, [user, router])
 
