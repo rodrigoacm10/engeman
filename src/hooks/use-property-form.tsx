@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { isAxiosError } from 'axios'
 
@@ -18,6 +18,7 @@ export function usePropertyForm({
   initialData,
   onSuccess,
 }: UsePropertyFormProps) {
+  const queryClient = useQueryClient()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -93,6 +94,14 @@ export function usePropertyForm({
           ? 'Imóvel atualizado com sucesso!'
           : 'Imóvel cadastrado com sucesso!',
       )
+      if (initialData) {
+        queryClient.invalidateQueries({
+          queryKey: ['property', initialData.id],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['property', String(initialData.id)],
+        })
+      }
       onSuccess()
     },
     onError: (error) => {
