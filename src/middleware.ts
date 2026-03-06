@@ -7,16 +7,22 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value
 
-  const isAuthPage =
+  const isPublicPage =
     pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isRoot = pathname === '/'
+
   const isProtectedRoute =
-    pathname === '/' ||
+    pathname === '/list' ||
     pathname.startsWith('/me') ||
     pathname.startsWith('/properties') ||
     pathname.startsWith('/favorites')
 
-  if (isAuthPage && token) {
-    return NextResponse.redirect(new URL('/', request.url))
+  if (isRoot) {
+    return NextResponse.redirect(new URL('/list', request.url))
+  }
+
+  if (isPublicPage && token) {
+    return NextResponse.redirect(new URL('/list', request.url))
   }
 
   if (isProtectedRoute && !token) {
