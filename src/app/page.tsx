@@ -1,5 +1,7 @@
-import { redirect } from 'next/navigation'
-
 export default function HomePage() {
-  redirect('/list')
+  return (
+    <div>
+      <p>home</p>
+    </div>
+  )
 }
