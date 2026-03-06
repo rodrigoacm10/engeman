@@ -15,6 +15,10 @@ export function usePropertyCardAction(property: Property) {
     queryClient.invalidateQueries({ queryKey: ['properties'] })
     queryClient.invalidateQueries({ queryKey: ['favorites'] })
     queryClient.invalidateQueries({ queryKey: ['userProperties'] })
+    queryClient.invalidateQueries({ queryKey: ['property', property.id] })
+    queryClient.invalidateQueries({
+      queryKey: ['property', String(property.id)],
+    })
   }
 
   const deleteMutation = useMutation({

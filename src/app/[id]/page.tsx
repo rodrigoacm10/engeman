@@ -27,7 +27,7 @@ export default function PropertyDetailsPage({
   const router = useRouter()
 
   const { data: property, isLoading } = useQuery({
-    queryKey: ['property', id],
+    queryKey: ['property', Number(id)],
     queryFn: () => propertyService.getPropertyById(Number(id)),
     enabled: !!id,
   })
