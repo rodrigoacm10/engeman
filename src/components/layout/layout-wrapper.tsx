@@ -2,10 +2,10 @@
 
 import { usePathname } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/app-sidebar'
-import { AppHeader } from '@/components/app-header'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppSidebar } from './app-sidebar'
+import { AppHeader } from './app-header'
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

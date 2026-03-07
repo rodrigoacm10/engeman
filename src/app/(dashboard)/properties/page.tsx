@@ -1,8 +1,8 @@
 'use client'
 
-import { useProperties } from '@/hooks/use-properties'
-import { PropertyDialog } from '@/components/property-dialog'
-import { PropertyCard } from '@/components/property-card'
+import { useProperties } from '@/hooks/property/use-properties'
+import { PropertyDialog } from '@/components/property/property-dialog'
+import { PropertyCard } from '@/components/property/property-card'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 }
 
 import { AuthProvider } from '@/contexts/auth-context'
-import { LayoutWrapper } from '@/components/layout-wrapper'
+import { LayoutWrapper } from '@/components/layout/layout-wrapper'
 import { QueryProvider } from '@/providers/query-provider'
 
 export default function RootLayout({

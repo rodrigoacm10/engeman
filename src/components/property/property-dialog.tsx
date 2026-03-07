@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { PropertyForm } from '@/components/property-form'
+import { PropertyForm } from '@/components/property/property-form'
 import { Property } from '@/types/property'
 
 interface PropertyDialogProps {
