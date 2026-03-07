@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { isAxiosError } from 'axios'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { ProfileFormValues, profileSchema } from '@/schemas/profile-schema'
 
 export function useUpdateProfile() {

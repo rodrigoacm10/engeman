@@ -1,5 +1,5 @@
 import { Loader2, Save } from 'lucide-react'
-import { useUpdateProfile } from '@/hooks/use-update-profile'
+import { useUpdateProfile } from '@/hooks/user/use-update-profile'
 import { Button } from '@/components/ui/button'
 import {
   Form,

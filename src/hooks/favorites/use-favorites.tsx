@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useAuth } from './use-auth'
+import { useAuth } from '../auth/use-auth'
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { PaginatedResponse, Property } from '@/types/property'

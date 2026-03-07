@@ -6,7 +6,7 @@ Bem-vindo ao repositório do **Engimob**, uma plataforma desenvolvida para o des
 
 ## 🎯 Objetivo do Projeto
 
-Construir um front-end moderno, responsivo e performático em React (Next.js) que permita aos usuários comuns e corretores interagirem com anúncios imobiliários através da API fornecida. O sistema cobre uma jornada completa: desde visualização pública e filtros, até autenticação, favoritação e gestão completa (CRUD) de imóveis na área logada.
+Construir um front-end moderno, responsivo e performático em React (Next.js) que permita aos usuários comuns e corretores interagirem com anúncios imobiliários através da API fornecida. O sistema exige autenticação em todas as frentes: desde a listagem e aplicação de filtros, até a favoritação e gestão completa (CRUD) de imóveis.
 
 ## 🚀 Tecnologias e Ferramentas Utilizadas
 
@@ -23,34 +23,28 @@ Este projeto foi construído pensando nas melhores práticas atuais de desenvolv
 
 ## 🌟 Funcionalidades Implementadas
 
-O projeto atende **100% dos requisitos propostos**, divididos nas seguintes áreas:
+O projeto atende **100% dos requisitos propostos**, com todas as frentes protegidas por autenticação:
 
 ### 1️⃣ Autenticação e Segurança
 
 - [x] Telas de **Login** e **Registro** completas com validação de dados.
 - [x] Autenticação via JWT (`Authorization: Bearer <token>`).
-- [x] Persistência segura do token e proteção rigorosa de rotas privadas.
+- [x] Persistência segura do token e proteção rigorosa de **todas as rotas**.
 
-### 2️⃣ Área Pública (Deslogada)
+### 2️⃣ Exploração e Favoritos
 
-- [x] **Listagem Principal (Home)**:
+- [x] **Listagem Principal**:
   - Consumo do endpoint `/api/property` com suporte completo à **paginação**.
   - **Filtros dinâmicos**: nome, tipo de imóvel, preço mínimo/máximo, e quantidade mínima de quartos.
   - Sincronização inteligente dos filtros com a URL (State ↔ Querystring).
   - Busca por nome com **debounce** (evitando múltiplas chamadas desnecessárias).
 - [x] **Detalhes do Imóvel**:
   - Exibição de todas as informações da propriedade e galeria de imagens completa.
-
-### 3️⃣ Área Autenticada ("Minha Conta")
-
-- [x] **Meu Perfil**:
-  - Consulta aos dados do usuário via API (`/api/user`).
-  - Atualização de senha e nome do usuário.
 - [x] **Meus Favoritos**:
   - Área exclusiva para listar os imóveis favoritados pelo usuário.
   - Interação fluida (favoritar/desfavoritar) com validação e refetch automático via React Query.
 
-### 4️⃣ Área do Corretor/Admin ("Minhas Propriedades")
+### 3️⃣ Gestão de Imóveis (Corretor/Admin)
 
 - [x] **Gerenciamento Completo de Imóveis**:
   - Listagem das próprias propriedades (`/getUserProperties`).
@@ -58,6 +52,12 @@ O projeto atende **100% dos requisitos propostos**, divididos nas seguintes áre
   - **Edição** completa das informações dos imóveis.
   - Controle de visualização: **Ativar/Inativar** (Status) anúncios.
   - Deleção responsável com confirmação.
+
+### 4️⃣ Perfil do Usuário
+
+- [x] **Meu Perfil**:
+  - Consulta aos dados do usuário via API (`/api/user`).
+  - Atualização de senha e nome do usuário.
 
 ---
 
@@ -121,7 +121,7 @@ O projeto atende **100% dos requisitos propostos**, divididos nas seguintes áre
 
 ## 💡 Destaques Técnicos Relevantes
 
-- **Hooks e Abstrações Reutilizáveis**: O uso de padrões como Custom Hooks permitiu, por exemplo, unificar a lógica de edição/deleção de _cards_ em um único hook (`usePropertyCardAction`), reaproveitado tanto na Home, Favoritos e Área Logada.
+- **Hooks e Abstrações Reutilizáveis**: O uso de padrões como Custom Hooks permitiu, por exemplo, unificar a lógica de edição/deleção de _cards_ em um único hook (`usePropertyCardAction`), reaproveitado tanto na Listagem Principal, Favoritos e Gerenciamento de Imóveis.
 - **Sincronização com URL Parameters**: A implementação avançada e sincronizada do filtro, onde todos os parâmetros preenchidos reagem dinamicamente para a URL, permitindo o compartilhamento seguro e robusto da tela que o usuário esta vendo com outra pessoa.
 - **Cache Invalidation**: Ao realizar uma ação nas propriedades (criar, atualizar, inativar, deletar ou favoritar), a listagem correspondente tem a _query key_ imediatamente invalidada, renderizando o novo estado fluidamente pro usuário com ajuda da biblioteca `@tanstack/react-query`.
 

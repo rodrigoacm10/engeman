@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useRegisterForm } from '@/hooks/use-register-form'
+import { useRegisterForm } from '@/hooks/auth/use-register-form'
 
 export function RegisterForm({
   className,

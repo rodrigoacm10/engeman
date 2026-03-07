@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, User as UserIcon, Mail, Shield } from 'lucide-react'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/auth/use-auth'
 import {
   Card,
   CardContent,
@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { UserPlus } from 'lucide-react'
-import { ProfileForm } from '@/components/profile-form'
-import { CreateUserForm } from '@/components/create-user-form'
+import { ProfileForm } from '@/components/user/profile-form'
+import { CreateUserForm } from '@/components/user/create-user-form'
 
 export default function MePage() {
   const { user, loading: authLoading } = useAuth()

@@ -2,9 +2,9 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { PropertyCard } from '@/components/property-card'
+import { PropertyCard } from '@/components/property/property-card'
 import { Loader2, Search } from 'lucide-react'
-import { useFavorites } from '@/hooks/use-favorites'
+import { useFavorites } from '@/hooks/favorites/use-favorites'
 
 export default function FavoritesPage() {
   const { filters, card, loading } = useFavorites()
