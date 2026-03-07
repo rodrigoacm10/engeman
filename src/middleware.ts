@@ -7,8 +7,6 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value
 
-  console.log(`[Middleware] -> Path: ${pathname} | Token exists: ${!!token}`)
-
   const publicPages = ['/login', '/register']
   const isPublicPage = publicPages.some(
     (page) => pathname === page || pathname.startsWith(`${page}/`),
@@ -21,20 +19,13 @@ export function middleware(request: NextRequest) {
     if (!isRoot) {
       url.searchParams.set('from', pathname)
     }
-    console.log(
-      `[Middleware] REDIRECIONANDO -> Sem token, destino: ${url.pathname}`,
-    )
     return NextResponse.redirect(url)
   }
 
   if (token && (isPublicPage || isRoot)) {
-    console.log(
-      `[Middleware] REDIRECIONANDO -> Com token na raiz/public, destino: /list`,
-    )
     return NextResponse.redirect(new URL('/list', request.url))
   }
 
-  console.log(`[Middleware] OK -> Deixando passar a requisição: ${pathname}`)
   return NextResponse.next()
 }
 
