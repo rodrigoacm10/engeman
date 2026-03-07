@@ -2,6 +2,8 @@
 
 Bem-vindo ao repositório do **Engimob**, uma plataforma desenvolvida para o desafio técnico de Front-end com foco no mercado imobiliário!
 
+> 🔗 **Link do Deploy**: [https://engeman-sigma.vercel.app](https://engeman-sigma.vercel.app)
+
 ## 🎯 Objetivo do Projeto
 
 Construir um front-end moderno, responsivo e performático em React (Next.js) que permita aos usuários comuns e corretores interagirem com anúncios imobiliários através da API fornecida. O sistema cobre uma jornada completa: desde visualização pública e filtros, até autenticação, favoritação e gestão completa (CRUD) de imóveis na área logada.
