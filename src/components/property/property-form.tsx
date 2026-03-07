@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Property } from '@/types/property'
-import { usePropertyForm } from '@/hooks/use-property-form'
+import { usePropertyForm } from '@/hooks/property/use-property-form'
 
 interface PropertyFormProps {
   initialData?: Property | null

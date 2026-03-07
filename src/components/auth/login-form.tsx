@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useLoginForm } from '@/hooks/use-login-form'
+import { useLoginForm } from '@/hooks/auth/use-login-form'
 
 export function LoginForm({
   className,

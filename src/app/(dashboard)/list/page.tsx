@@ -2,12 +2,12 @@
 
 import { Suspense } from 'react'
 import { PropertyType } from '@/types/property'
-import { useHome } from '@/hooks/use-home'
+import { useHome } from '@/hooks/list/use-home'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { PropertyCard } from '@/components/property-card'
+import { PropertyCard } from '@/components/property/property-card'
 import {
   Select,
   SelectContent,

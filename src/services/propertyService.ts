@@ -34,37 +34,30 @@ export const propertyService = {
     const response = await api.get<Property[]>(
       '/api/property/getUserProperties',
     )
-    console.log('[GET] /api/property/getUserProperties', response.data)
     return response.data
   },
 
   async getPropertyById(id: number): Promise<Property> {
     const response = await api.get<Property>(`/api/property/${id}`)
-    console.log(`[GET] /api/property/${id}`, response.data)
     return response.data
   },
 
   async createProperty(data: PropertyCreateDTO): Promise<Property> {
-    console.log('DATA -> [POST] /api/property', data)
     const response = await api.post<Property>('/api/property', data)
-    console.log('RESPONSE -> [POST] /api/property', response.data)
     return response.data
   },
 
   async updateProperty(id: number, data: PropertyUpdateDTO): Promise<Property> {
     const response = await api.put<Property>(`/api/property/${id}`, data)
-    console.log('[PUT] /api/property', response.data)
     return response.data
   },
 
   async deleteProperty(id: number): Promise<void> {
     await api.delete(`/api/property/${id}`)
-    console.log('[DELETE] /api/property', id)
   },
 
   async togglePropertyStatus(id: number): Promise<Property> {
     const response = await api.patch<Property>(`/api/property/status/${id}`)
-    console.log('[PATCH] /api/property/status', response.data)
     return response.data
   },
 

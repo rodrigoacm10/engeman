@@ -14,7 +14,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
@@ -25,9 +25,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-import { PropertyDialog } from '@/components/property-dialog'
-import { PropertyDeleteDialog } from '@/components/property-delete-dialog'
-import { usePropertyCardAction } from '@/hooks/use-property-card-action'
+import { PropertyDialog } from '@/components/property/property-dialog'
+import { PropertyDeleteDialog } from '@/components/property/property-delete-dialog'
+import { usePropertyCardAction } from '@/hooks/property/use-property-card-action'
 
 interface PropertyCardProps {
   property: Property

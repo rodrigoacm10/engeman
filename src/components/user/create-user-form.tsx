@@ -1,5 +1,5 @@
 import { Loader2, Plus } from 'lucide-react'
-import { useCreateUser } from '@/hooks/use-create-user'
+import { useCreateUser } from '@/hooks/user/use-create-user'
 import { Button } from '@/components/ui/button'
 import {
   Form,
