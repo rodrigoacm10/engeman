@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebounce } from 'use-debounce'
 import { propertyService } from '@/services/propertyService'
@@ -126,8 +126,14 @@ export function useHome() {
     updateUrlParams()
   }, [updateUrlParams])
 
+  const isMounted = useRef(false)
+
   useEffect(() => {
-    setPage(0)
+    if (isMounted.current) {
+      setPage(0)
+    } else {
+      isMounted.current = true
+    }
   }, [debouncedName, type, minPrice, maxPrice, minBedrooms, size, sort])
 
   const clearFilters = () => {
