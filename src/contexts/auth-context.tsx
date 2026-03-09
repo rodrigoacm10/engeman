@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentToken(null)
     delete api.defaults.headers.Authorization
     queryClient.removeQueries({ queryKey: ['user'] })
-    router.push('/login')
+    window.location.href = '/login'
   }
 
   return (
